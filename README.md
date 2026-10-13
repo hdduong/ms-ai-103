@@ -6,16 +6,19 @@ The path is intermediate. It is aimed at data scientists and AI engineers who al
 
 ## Modules
 
-1. [Plan and prepare to develop AI solutions on Azure](https://learn.microsoft.com/en-us/training/modules/prepare-azure-ai-development/)
-2. Select, deploy, and evaluate Microsoft Foundry models
-3. [Develop a generative AI chat app with Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/)
-4. Develop generative AI apps that use tools
-5. Optimize generative AI model performance with Microsoft Foundry
-6. Implement a responsible generative AI solution in Microsoft Foundry
+- [001 Plan and prepare to develop AI solutions on Azure](notes/001-prepare-azure-ai-development/README.md)
+- [002 Develop a generative AI chat app with Microsoft Foundry](notes/002-foundry-sdk/README.md)
+
+Also on this path, not noted yet:
+
+- Select, deploy, and evaluate Microsoft Foundry models
+- Develop generative AI apps that use tools
+- Optimize generative AI model performance with Microsoft Foundry
+- Implement a responsible generative AI solution in Microsoft Foundry
 
 ## Sample unit: Choose an endpoint and SDK
 
-Module 3, unit: [Choose an endpoint and SDK](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/03-microsoft-foundry-sdk?pivots=text).
+Module 002, unit: [Choose an endpoint and SDK](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/03-microsoft-foundry-sdk?pivots=text).
 
 Before writing a chat app, pick an endpoint, a client SDK, and an authentication method. Each Foundry project exposes both a project endpoint and an Azure OpenAI endpoint.
 
