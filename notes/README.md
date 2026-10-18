@@ -1,8 +1,6 @@
 # Notes
 
-Path: [Develop generative AI apps in Azure](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/)
-
-| Module | Title | Notes |
+| Path | Title | Notes |
 | --- | --- | --- |
-| 001 | [Plan and prepare to develop AI solutions on Azure](https://learn.microsoft.com/en-us/training/modules/prepare-azure-ai-development/) | [001-prepare-azure-ai-development](001-prepare-azure-ai-development/README.md) |
-| 002 | [Develop a generative AI chat app with Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/) | [002-foundry-sdk](002-foundry-sdk/README.md) |
+| 001 | [Develop generative AI apps in Azure](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/) | [001-develop-generative-ai-apps](001-develop-generative-ai-apps/README.md) |
+| 002 | [Develop AI agents on Azure](https://learn.microsoft.com/en-us/training/paths/develop-ai-agents-azure/) | [002-develop-ai-agents-azure](002-develop-ai-agents-azure/README.md) |

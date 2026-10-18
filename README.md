@@ -1,40 +1,19 @@
 # ms-ai-103
 
-Study notes for the Microsoft Learn path [Develop generative AI apps on Microsoft Foundry](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/) (titled *Develop generative AI apps in Azure* on the path page).
+Study material for the Azure AI Apps and Agents Developer exam (AI-103).
 
-The path is intermediate. It is aimed at data scientists and AI engineers who already know basic AI concepts, Azure services, and a programming language. It covers building generative AI apps on [Microsoft Foundry](https://ai.azure.com) that use language models to talk with users.
+## notes
 
-## Modules
+Microsoft Learn paths, summarized by module and unit. Start at [notes/README.md](notes/README.md).
 
-- [001 Plan and prepare to develop AI solutions on Azure](notes/001-prepare-azure-ai-development/README.md)
-- [002 Develop a generative AI chat app with Microsoft Foundry](notes/002-foundry-sdk/README.md)
+- [Develop generative AI apps in Azure](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/)
+- [Develop AI agents on Azure](https://learn.microsoft.com/en-us/training/paths/develop-ai-agents-azure/)
 
-Also on this path, not noted yet:
+## practice-test
 
-- Select, deploy, and evaluate Microsoft Foundry models
-- Develop generative AI apps that use tools
-- Optimize generative AI model performance with Microsoft Foundry
-- Implement a responsible generative AI solution in Microsoft Foundry
+Third-party AI-103 practice material. These are not Microsoft exams and are not affiliated with Microsoft.
 
-## Sample unit: Choose an endpoint and SDK
-
-Module 002, unit: [Choose an endpoint and SDK](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/03-microsoft-foundry-sdk?pivots=text).
-
-Before writing a chat app, pick an endpoint, a client SDK, and an authentication method. Each Foundry project exposes both a project endpoint and an Azure OpenAI endpoint.
-
-| Choice | Endpoint shape | Client | Use it when |
-| --- | --- | --- | --- |
-| Foundry SDK | `https://{resource-name}.services.ai.azure.com/api/projects/{project-name}` | `AIProjectClient` from `azure-ai-projects`, then `get_openai_client()` | The app needs agents, evaluations, tracing, project connections, or models from the Foundry catalog |
-| OpenAI SDK | `https://{resource-name}.openai.azure.com/openai/v1` | `OpenAI` (or `AzureOpenAI` when a specific Azure OpenAI API version is required) | Existing OpenAI code should keep working, or the workload is model inference only |
-
-Production apps should authenticate with Microsoft Entra ID (`DefaultAzureCredential`, after `az login` for local runs). API keys and `OPENAI_BASE_URL` / `OPENAI_API_KEY` also work; keep keys in Azure Key Vault and out of source.
-
-For chat, prefer the Responses API on new work. Chat Completions remains the compatible option across models and platforms.
-
-Python packages for the Foundry path:
-
-```bash
-pip install azure-ai-projects azure-identity openai
-```
-
-The OpenAI-only path needs `openai` and `azure-identity` when using Entra ID.
+| Folder | Source | What it is |
+| --- | --- | --- |
+| [sefstratiou-ai](practice-test/sefstratiou-ai) | [sefstratiou-ai/ai-103-practice-exam](https://github.com/sefstratiou-ai/ai-103-practice-exam) | Browser simulator. 226 original questions, 51 per attempt. From that folder: `npm ci`, then `npm run dev`, or double-click `Start Exam.cmd` on Windows. |
+| [tpriyadata](practice-test/tpriyadata) | [tpriyadata/microsoft-ai-103-study-guide](https://github.com/tpriyadata/microsoft-ai-103-study-guide) | Study guide plus three markdown quizzes in `mock-tests`. |
