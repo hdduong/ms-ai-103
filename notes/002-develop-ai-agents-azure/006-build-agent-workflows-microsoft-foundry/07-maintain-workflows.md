@@ -2,7 +2,7 @@
 
 [Maintain Workflows in Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/7-maintain-workflows?pivots=text)
 
-- Canvas and YAML are the same workflow. Edit either one. Use YAML for source control.
-- Each save is a new immutable version. Compare and roll back.
-- Notes on a node explain why a branch or variable exists.
-- Drop unused nodes. Keep structured agent output handled the same way in every branch.
+- The canvas and the YAML are the same workflow. Edit either one and the other updates.
+- Every save creates a new immutable version. You can compare and roll back.
+- Notes on a node are for the next person: why the branch exists, what the variable holds.
+- Before you ship a change, drop unused nodes and check that structured agent output is still what the next node reads.

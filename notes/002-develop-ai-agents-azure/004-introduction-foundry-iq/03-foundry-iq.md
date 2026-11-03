@@ -2,23 +2,26 @@
 
 [Explore Foundry IQ](https://learn.microsoft.com/en-us/training/modules/introduction-foundry-iq/3-foundry-iq?pivots=text)
 
-- Foundry IQ is a knowledge platform on Azure AI Search. Build the knowledge base once. Many agents connect to it.
-- A knowledge base is a business domain (product docs, HR policy), not a storage account. SharePoint, blobs, OneLake, and an existing index can sit in one base.
-- Adding a source: discover files, chunk and embed, index, reindex when files change.
-- Retrieval picks keyword or semantic search, ranks results, and returns citations. You do not write that logic.
-- The agent connects with an `MCPTool` whose URL is `{search_endpoint}/knowledgebases/{name}/mcp`.
-- Share a base across agents. A support agent and a developer agent can both use product docs. An HR agent uses only the HR base.
+- Foundry IQ is a managed knowledge layer on Azure AI Search. Many agents share one knowledge base. You do not stand up a vector database per agent.
+- A knowledge base is a business domain, such as "Product Documentation", not a container name. SharePoint, Blob, and OneLake can sit in the same base.
+- Adding a source: discover files, chunk and embed them, index them, reindex when they change.
+- The service picks the search (keyword, semantic, query expansion), ranks the hits, and returns citations. You do not write that retrieval code.
+- The connection is MCP. The URL is `{search_endpoint}/knowledgebases/{name}/mcp`.
+
+## Knowledge base as an MCP tool
 
 ```python
+from azure.ai.projects.models import MCPTool, PromptAgentDefinition
+
 knowledge_tool = MCPTool(
     server_label="product-docs",
     server_url=f"{search_endpoint}/knowledgebases/product-documentation/mcp",
 )
 agent = project_client.agents.create_version(
-    agent_name="product-support-agent",
+    name="product-support-agent",
     definition=PromptAgentDefinition(
         model="gpt-4.1",  # deployment name
-        instructions="Answer product questions from the knowledge base. Cite the source.",
+        instructions="Answer product questions from the knowledge base. Always cite the source.",
         tools=[knowledge_tool],
     ),
 )

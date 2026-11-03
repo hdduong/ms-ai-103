@@ -2,15 +2,16 @@
 
 [Configure data sources for knowledge bases](https://learn.microsoft.com/en-us/training/modules/introduction-foundry-iq/4-data-requirements?pivots=text)
 
-- Six sources. Real-time stays current. Indexed is faster and can use custom search pipelines.
+Six sources. One knowledge base can mix them.
 
-| Source | Access | Use it when |
+| Source | Access | Pick it when |
 | --- | --- | --- |
-| Azure AI Search index | Indexed | You already have an index, semantic ranker, or scoring profile |
-| Blob Storage | Direct | PDF, docx, txt, md, HTML in a container |
-| Web (Bing) | Real-time | Public, changing facts. You do not control the sites |
-| SharePoint remote | Real-time | Live files, SharePoint permissions, no index to maintain |
-| SharePoint indexed | Indexed | Custom analyzers or a mix with other sources |
-| OneLake | Direct | Fabric lakehouse files, reports, research |
+| Azure AI Search index | Indexed | You already have an index, semantic rank, filters, or a scoring profile |
+| Azure Blob Storage | Direct | Files in a container: PDF, docx, txt, md, HTML. No index to maintain |
+| Web (Bing) | Real time | Public, changing facts. You do not control the sites |
+| SharePoint remote | Real time | Live SharePoint, current permissions, no index |
+| SharePoint indexed | Indexed | SharePoint plus custom analyzers, enrichment, or a mix with other sources |
+| OneLake | Direct | Unstructured files in a Fabric lakehouse |
 
-- One knowledge base can mix sources. Prefer an internal source when the answer must be checked. Use the web only as a backup.
+- Remote SharePoint is slower and always current. Indexed SharePoint is faster and only as fresh as the last index.
+- Use web as a backup when the internal base has no answer. Do not use it when the source of the answer has to be yours.

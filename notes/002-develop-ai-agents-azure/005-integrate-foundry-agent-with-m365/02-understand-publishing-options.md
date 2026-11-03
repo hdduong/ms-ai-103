@@ -2,9 +2,10 @@
 
 [Understand Foundry agent publishing options](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/2-understand-publishing-options?pivots=text)
 
-- Publish turns the agent into an Agent Application: a stable URL, its own Entra identity, and user data that is not shared with other users. A new version keeps the same URL.
-- Microsoft 365 publish creates a Bot Service, an Entra app, and a package, then lists the agent in the Teams store.
-- **Shared** scope shows under Your agents immediately. **Organization** scope shows under Built by your org after an admin approves it.
-- Other channels: a web preview, the REST endpoint, or Bot Service (Slack, Telegram, Twilio SMS, Facebook).
-- The published identity does not inherit project permissions. Re-grant RBAC for Azure AI Search and the other tools.
-- You need Azure AI Project Manager on the project, Azure AI User on the agent app, rights to create a bot and an Entra app, a tenant that allows custom apps, and an Agent 365 license for Defender discovery and threat detection.
+- Publish turns the agent into an **Agent Application**: a stable URL, its own Entra identity, and user data that stays per user. A new version does not change the URL.
+- Microsoft 365 publish creates an Azure Bot Service resource, an Entra app registration, and a package for the Teams store.
+- Direct publish from the portal is the normal path. The Agents Toolkit proxy is for custom SSO, middleware, or a dev/stage/prod pipeline.
+- **Shared** scope shows under **Your agents** with no admin approval. **Organization** scope shows under **Built by your org** and needs admin approval.
+- Other channels: a web preview, the stable Responses endpoint, and Bot Service channels (Slack, Telegram, Twilio SMS, Facebook).
+- The published identity is not the project identity. Re-grant roles for Azure AI Search and any other tool resource.
+- Roles: **Azure AI Project Manager** to publish, **Azure AI User** to chat. You also need rights to create a Bot Service resource and to register an Entra app. A Microsoft 365 tenant that allows custom apps. A **Microsoft Agent 365** license covers discovery and Defender posture.

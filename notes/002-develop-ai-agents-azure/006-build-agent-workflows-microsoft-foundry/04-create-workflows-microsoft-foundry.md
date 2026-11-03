@@ -2,6 +2,15 @@
 
 [Create workflows in Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/4-create-workflows-microsoft-foundry?pivots=text)
 
-- Blank canvas or a pattern such as sequential. The designer does not autosave.
-- **Invoke** calls an agent. Text or JSON. **Flow** is If/Else, Go To, or For Each. **Data** is Set Variable, Reset Variable, or Parse value. **Basic chat** messages the user. **End** finishes and can return a result.
-- Variables are the shared state. The chat window is how you watch a run.
+- Start from a blank canvas or a pattern such as sequential. The designer does not autosave. Save to keep a version.
+- You chat with the workflow in the same window to see each node run.
+
+| Node | What it does |
+| --- | --- |
+| Invoke | Calls an agent in the project, or creates one. Text or JSON |
+| Flow | If/Else, Go To, For Each |
+| Data | Set variable, reset variable, parse a value |
+| Basic chat | A message or a question to the user |
+| End | Stops the flow and can return a result |
+
+Variables are the shared state. An agent result or a user answer becomes the input of a later node.

@@ -2,10 +2,13 @@
 
 [Use workflows in code](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/8-use-workflows-in-code?pivots=text)
 
-- Design in the portal. Call it by name with `type: agent_reference`. You can also download the YAML.
+- Design the workflow in the portal. Call it by name. You can also download the YAML.
 - `input` is the user text, a ticket, a payload, or an empty string that only starts the flow.
 - Stream events: `response.completed` is the final text. `response.output_item.done` with a workflow action is one node finishing.
 - A human-in-the-loop pause needs another message on the same conversation to continue.
+- `type` is `agent_reference`. This unit puts that object under the key `agent`.
+
+## Invoke
 
 ```python
 conversation = openai_client.conversations.create()

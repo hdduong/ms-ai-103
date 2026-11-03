@@ -2,7 +2,10 @@
 
 [Identify Workflow Patterns](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/3-identify-workflow-patterns?pivots=text)
 
-- **Sequential.** Fixed order. Output of one node is the input of the next. Start here. Good for validate, enrich, answer.
-- **Human-in-the-loop.** The workflow asks, waits, then continues. Approvals and missing context.
-- **Group chat.** Several agents, no fixed path. Control moves by context. Support and multi-domain questions.
-- Pick the pattern before you draw the canvas.
+| Pattern | What happens | Use it when |
+| --- | --- | --- |
+| Sequential | Each node runs in order and passes its output on | A fixed pipeline: validate, enrich, answer |
+| Human-in-the-loop | The flow asks a question and waits | Approval, a missing fact, a confirmation |
+| Group chat | Control moves between agents from context | Several specialists on one request |
+
+Pick the pattern before you add nodes. Sequential is the one to learn first because the path is visible.

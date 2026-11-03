@@ -1,8 +1,15 @@
-# 04 Advanced — Use Microsoft 365 Agents Toolkit
+# 04 Use Microsoft 365 Agents Toolkit
 
 [Advanced — Use Microsoft 365 Agents Toolkit](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/4-agents-toolkit-advanced?pivots=text)
 
-- Skip this for a normal Teams publish. Use the toolkit when you need custom SSO, middleware, separate dev/stage/prod, or a CI pipeline.
-- Shape: Teams or Copilot, then a proxy app, then the Foundry agent. The proxy is where you log or change the message.
-- In VS Code: Agents Toolkit > Create a New Agent/App > Custom Engine Agent. Point it at the Foundry endpoint. The Agents Playground simulates Teams locally.
-- Direct publish is minutes and no code. The proxy is hours and a real app. Use the proxy only when the portal publish cannot do the job.
+- Skip this unit until you need custom SSO, middleware, a separate dev/stage/prod deploy, or CI. Direct portal publish covers the normal case.
+- The toolkit is a VS Code or Visual Studio extension. The project type is **Custom Engine Agent**. You point it at the Foundry agent endpoint.
+- Shape: Teams or Copilot, then your proxy, then the Foundry agent. The proxy is where SSO and middleware live.
+- Local test is the **Microsoft 365 Agents Playground**. Then the toolkit provisions Azure, deploys the proxy, and registers the app in Teams.
+
+| | Portal publish | Agents Toolkit proxy |
+| --- | --- | --- |
+| Time | Minutes | Hours to days |
+| Code | None | A proxy app |
+| Customization | Limited | SSO, middleware, environments |
+| Debug | Foundry playground | The IDE |

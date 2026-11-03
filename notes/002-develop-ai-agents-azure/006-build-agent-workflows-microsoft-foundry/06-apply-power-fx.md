@@ -2,7 +2,16 @@
 
 [Apply Power Fx in Workflows](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/6-apply-power-fx?pivots=text)
 
-- Power Fx is the expression language on conditions, variables, and loops. Excel-like.
-- `Local.*` is data from this run. System variables are the conversation: last message, user, current activity.
-- If/Else uses a Boolean such as `Local.Confidence > 0.8`. For Each walks a list. `ForAll` applies a formula to each row.
-- Useful functions: `Upper`, `Lower`, `Len`, `If`, `Sum`, `Count`, `IsBlank`, `IsEmpty`, `Concatenate`.
+- Power Fx is the expression language on If/Else, Set variable, and For Each. `Local.*` is data this run stored. System variables are the current activity, the last message, and the user.
+- If/Else branches on a formula. For Each runs the same nodes for each item, such as one pass per ticket.
+
+## Formulas
+
+```text
+Upper(Local.Input)
+Local.Confidence > 0.8
+If(Local.Confidence > 0.8, "Proceed", "Escalate")
+Sum(Local.ItemList, Amount)
+IsBlank(Local.Input)
+ForAll(Local.ItemList, Upper(Name))
+```

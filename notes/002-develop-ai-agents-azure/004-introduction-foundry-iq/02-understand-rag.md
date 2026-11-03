@@ -2,7 +2,7 @@
 
 [Understanding RAG for agents](https://learn.microsoft.com/en-us/training/modules/introduction-foundry-iq/2-understand-rag?pivots=text)
 
-- A model-only agent misses private data, anything after its cutoff, and your process. It will invent an answer. Every team that builds its own index repeats the same work.
-- RAG: **retrieve**, **augment** the prompt, **generate**.
-- You get current facts, a source the user can check, and answers tied to your documents.
-- Foundry IQ is that retrieval layer as a shared service, so you do not stand up a new index per agent.
+- A model with no retrieval misses new facts, private docs, your process, and it will invent an answer. Every team then rebuilds the same search stack.
+- RAG is three steps: **retrieve** matching chunks, **augment** the prompt with those chunks, **generate** the reply from that context.
+- What you get: answers stay current without a new training run, the reply can name the source, and the answer is tied to your documents.
+- Foundry IQ is that stack as a shared service. The next unit is the product.

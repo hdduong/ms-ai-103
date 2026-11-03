@@ -4,7 +4,7 @@
 
 - One agent is one instruction set. Orchestration splits the job so each agent has a skill, then combines the results.
 - A workflow is executors plus edges. An executor is an agent or your own step. Edges are direct, conditional, switch-case, fan-out, or fan-in.
-- Events to log: WorkflowStarted, WorkflowOutput, WorkflowError, ExecutorInvoke, ExecutorComplete, RequestInfo. Workflows can checkpoint and resume.
+- Events to log: `WorkflowStartedEvent`, `WorkflowOutputEvent`, `WorkflowErrorEvent`, `ExecutorInvokeEvent`, `ExecutorCompleteEvent`, `RequestInfoEvent`. Workflows can checkpoint and resume.
 - Five patterns, same shape: define agents, pick a builder, optional callbacks, start the runtime, invoke, read results async.
 
 | Pattern | What happens | Use it when |

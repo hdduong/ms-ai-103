@@ -2,7 +2,6 @@
 
 [Add Agents to a Workflow](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/5-add-agents-to-workflow?pivots=text)
 
-- An Invoke agent node uses an agent already in the project, or you create one on the canvas.
-- Configure tools, knowledge, memory, and guardrails on that node. The workflow passes user input and variables in, and stores the reply in a variable.
-- Reuse a classifier agent across workflows. Keep a different agent for the action that follows.
-- Structured JSON from the Details tab is what If/Else and later nodes should read. Free text is harder to branch on.
+- Add an **Invoke agent** node. Point it at an existing agent, or create one in the designer. The editor sets tools, knowledge, memory, and guardrails.
+- The node receives user input and earlier variables, and returns text or JSON. A JSON schema on the **Details** tab is what a later If/Else can branch on.
+- Store the output in a variable from **Action settings**. One categorization agent can be reused by many workflows. A different agent handles the resolution.
