@@ -10,3 +10,6 @@
 | 04 | [Foundry Tools](https://learn.microsoft.com/en-us/training/modules/prepare-azure-ai-development/3-azure-ai-services) | [04-foundry-tools.md](04-foundry-tools.md) |
 | 05 | [Developer tools and SDKs](https://learn.microsoft.com/en-us/training/modules/prepare-azure-ai-development/5-tools-and-sdks) | [05-developer-tools-and-sdks.md](05-developer-tools-and-sdks.md) |
 | 06 | [Responsible AI](https://learn.microsoft.com/en-us/training/modules/prepare-azure-ai-development/6-responsible-ai) | [06-responsible-ai.md](06-responsible-ai.md) |
+| 07 | [Exercise: Prepare for an AI development project](https://learn.microsoft.com/en-us/training/modules/prepare-azure-ai-development/7-exercise-explore-ai-foundry) | [07-exercise-prepare-project.md](07-exercise-prepare-project.md) |
+
+Reviewed against current Microsoft Learn on **2026-11-07**. The exercise lesson records its official source snapshot, setup, code or portal steps, and validation limits. Existing screenshots retain the deployments used when they were captured.

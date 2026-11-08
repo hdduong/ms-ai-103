@@ -10,3 +10,5 @@
 | 04 | [Advanced — Use Microsoft 365 Agents Toolkit](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/4-agents-toolkit-advanced?pivots=text) | [04-agents-toolkit-advanced.md](04-agents-toolkit-advanced.md) |
 | 05 | [Access Microsoft 365 data with Work IQ](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/5-access-m365-data-workiq?pivots=text) | [05-access-m365-data-workiq.md](05-access-m365-data-workiq.md) |
 | 06 | [Test and iterate your integrated agent](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/6-test-iterate-agent?pivots=text) | [06-test-iterate-agent.md](06-test-iterate-agent.md) |
+| 07 | [Exercise — Publish to Teams and Microsoft 365 Copilot](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/05a-m365-teams-integration.html) | [07-exercise-m365-integration.md](07-exercise-m365-integration.md) |
+| Optional | [Exercise — Work IQ](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/05b-work-iq-integration.html) | [07b-exercise-work-iq.md](07b-exercise-work-iq.md) |

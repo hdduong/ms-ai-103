@@ -8,7 +8,7 @@
 - A good reply is grounded, cited, relevant, and complete.
 - Support agents should refuse to guess. Research agents may combine sources and should cite all of them. Compliance agents stay inside the policy text and name the section and effective date.
 - In production, watch citation rate, how often it says it does not know, and whether the retrieved docs actually answer the question.
-- `type` is `agent_reference`. This unit puts that object under the key `agent`. The call runs the saved agent, so there is no `model` argument here.
+- The current project-client exercise supplies `extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}}`. This runs the saved agent configuration, so the response call does not separately select a `model`.
 
 ## Instructions from the exercise
 
@@ -32,35 +32,6 @@ print(instructions)
 
 ## Ask, then approve the knowledge-base call
 
-```python
-openai_client.conversations.items.create(
-    conversation_id=conversation.id,
-    items=[{"type": "message", "role": "user", "content": "What tents does Contoso sell?"}],
-)
-response = openai_client.responses.create(
-    conversation=conversation.id,
-    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    input="",
-)
-while True:
-    approval_requests = [
-        item for item in (response.output or [])
-        if item.type == "mcp_approval_request"
-    ]
-    if not approval_requests:
-        break
-    openai_client.conversations.items.create(
-        conversation_id=conversation.id,
-        items=[{
-            "type": "mcp_approval_response",
-            "approval_request_id": item.id,
-            "approve": True,
-        } for item in approval_requests],
-    )
-    response = openai_client.responses.create(
-        conversation=conversation.id,
-        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-        input="",
-    )
-print(response.output_text)
-```
+Use [the complete exercise client](06-exercise-foundry-iq.md). It adds the user message, creates a response on the conversation, shows each pending tool's server/name/arguments, and submits your `approve=True` or `approve=False` decision with the matching `approval_request_id`. It handles zero, one, or multiple requests and bounded successive tool rounds.
+
+Enable **Never auto-approve tools** on the actual `kb-knowledgebase...` tool in VS Code and save/deploy the agent first. The portal's default connection may auto-approve. Requiring approval does not itself create a UI; the Python client is responsible for collecting the decision.

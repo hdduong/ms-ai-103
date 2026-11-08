@@ -9,10 +9,11 @@
 
 ```python
 vector_store = openai_client.vector_stores.create(name="policy-docs")
-openai_client.vector_stores.files.upload_and_poll(
-    vector_store_id=vector_store.id,
-    file=open("expenses_policy.pdf", "rb"),
-)
+with open("expenses_policy.pdf", "rb") as policy_file:
+    openai_client.vector_stores.files.upload_and_poll(
+        vector_store_id=vector_store.id,
+        file=policy_file,
+    )
 response = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     instructions="You are an AI assistant that provides information from HR policy documents.",
@@ -24,3 +25,5 @@ response = openai_client.responses.create(
 )
 print(response.output_text)
 ```
+
+`expenses_policy.pdf` is an illustrative local input you must provide. For supplied documents, exact dependencies, authentication, and a complete application, use [Exercise: Use web and file search](07-exercise-use-tools.md).

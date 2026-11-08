@@ -7,7 +7,7 @@
 - Generation quality (a GPT model can score these): **groundedness** (and Groundedness Pro, yes/no), **relevance**, **coherence**, **fluency**.
 
 ![Build > Evaluations > Evaluator catalog. Built-in evaluators are grouped by quality and safety, including ungroundedness and content-safety checks.](images/05-evaluator-catalog.png)
-- Safety defect rate is the share of replies at or above a severity, usually Medium. Categories: self-harm, hate and unfairness, violence, sexual, protected material, indirect attack (jailbreak).
+- Safety defect rate is the share of replies at or above a severity, usually Medium. Evaluator categories include self-harm, hate and unfairness, violence, sexual content, protected material, and indirect attacks. **Direct user-prompt attacks** and **indirect attacks embedded in documents/tool results** are distinct; see [Prompt Shields](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/concepts/jailbreak-detection).
 - NLP metrics need a reference answer: **F1** (shared words), **BLEU** and **GLEU** (n-grams, translation), **METEOR** (synonyms and stemming), **ROUGE** (recall, good for summaries). Weak for open-ended answers.
 - An evaluation run can target a model, an agent, or a dataset of answers you already have. Data can be a CSV or JSONL upload, an existing dataset, or synthetic rows from a topic prompt.
 - Low quality: tighten the prompt, switch model, add RAG, or fine-tune. Do the cheaper step first. Safety gaps: content filters, harder system instructions, and a check before the user sees the output.

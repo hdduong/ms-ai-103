@@ -16,13 +16,15 @@
 
 ## What the proxy calls
 
+This is an illustrative endpoint call, not a complete Teams bot or code from the portal-only publishing exercise.
+
 The proxy forwards each Teams message to the Foundry agent's stable Responses endpoint. It signs in with Entra. API keys do not work on this endpoint. The proxy's identity needs **Foundry User** on the agent.
 
 ```python
 import requests
 from azure.identity import DefaultAzureCredential
 
-def ask_foundry_agent(text: str) -> str:
+def ask_foundry_agent(text: str) -> dict:
     token = DefaultAzureCredential().get_token("https://ai.azure.com/.default").token
     url = (
         "https://{resource-name}.services.ai.azure.com/api/projects/<project-name>"
@@ -33,6 +35,7 @@ def ask_foundry_agent(text: str) -> str:
         url,
         headers={"Authorization": f"Bearer {token}"},
         json={"input": text},
+        timeout=60,
     )
     response.raise_for_status()
     return response.json()

@@ -2,15 +2,31 @@
 
 [Deploy models to endpoints](https://learn.microsoft.com/en-us/training/modules/model-catalog-evaluate/4-deploy-models?pivots=text)
 
-- Deploy from Discover > Models. Default settings are the fast path. Custom settings change the type and name.
-- The **deployment name** is what the app passes as `model`. It can differ from the catalog id.
-- Prefer **Global Standard** when the model supports it. Pay per token, any region, highest quota.
+- Deploy from **Discover → Models**. Custom settings change the deployment type and name.
+- The **deployment name** is what the app passes as `model`. It can differ from the catalog ID.
+- **Global Standard** is a common starting point when supported and suitable for the application's processing-location requirements. Availability and quota depend on model, region, and subscription.
 
 ![gpt-4.1 details. Deployment type GlobalStandard, provisioning Succeeded, key masked. The endpoint is the OpenAI v1 URL on the Foundry resource.](images/04-deployment-details.png)
-- Global **Provisioned** reserves throughput (PTU). Global **Batch** is about half price for async jobs that can finish within 24 hours.
-- **Data Zone** keeps data in a zone (US, EU, APAC). **Regional** stays in one region. Each of those also has Standard, Provisioned, and Batch.
-- **Developer** deployments are only for evaluating a fine-tuned model.
-- Partner and community models may need a Marketplace agreement. Azure OpenAI models sold by Azure do not.
-- Managed compute also needs a VM SKU (quota) and an instance count.
-- After deploy, the playground opens. Status should be **Succeeded**. Manage deployments under Build > Models. The details page has the endpoint, key or token, and metrics.
-- To call it you need the endpoint (project or OpenAI v1), auth (Entra ID in production, or a key), and the deployment name.
+
+## Deployment choice
+
+| Processing scope | Types in the current deployment reference | Main distinction |
+| --- | --- | --- |
+| Global | Standard, Provisioned, Batch | Processing can use global infrastructure |
+| Data Zone | Standard, Provisioned, Batch | Processing remains in the selected US, EU, or APAC zone |
+| Azure geography | Standard, Regional Provisioned | Processing remains in the chosen Azure geography; no regional Batch type is listed |
+| Developer | Fine-tuned model evaluation | Short-lived evaluation deployment |
+
+- **Standard** is token-based consumption. **Provisioned** reserves throughput using PTUs.
+- **Batch** offers discounted asynchronous processing, targeting completion within 24 hours; this is not a completion guarantee.
+- **Developer** has a 24-hour lifetime, no availability SLA, and no data-residency guarantee. Use it for evaluation.
+- Data at rest and inference processing location are separate considerations.
+
+**Review note (2026-11-07):** The training unit describes regional processing as a single region. The current [deployment-types product reference](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/concepts/deployment-types) describes processing within an **Azure geography**, potentially across its regions. Use that current product reference when evaluating residency requirements, and check model-specific availability.
+
+## After deployment
+
+- Partner/community models may require a Marketplace agreement. Managed compute also requires VM quota and an instance count.
+- Check **Succeeded** status and test in the playground. Manage deployments under **Build → Models**.
+- Calling the deployment requires a compatible endpoint, authentication, and its deployment name. The direct OpenAI SDK lab uses the **Azure OpenAI `/openai/v1/` endpoint** with Microsoft Entra authentication.
+- The screenshot retains the earlier `gpt-4.1` example. The [current comparison exercise](06-exercise-compare-models.md) deploys `gpt-5.2` and `gpt-5-mini`.

@@ -9,5 +9,5 @@
 - System-message checklist: role, boundaries, output format, and what to do when unsure.
 - Patterns: persona, a format template, chain of thought (for non-reasoning models; reasoning models already do the steps), few-shot versus zero-shot.
 - Separate instructions from source text with `---`, headings, or XML tags. If instructions are ignored, repeat them at the end. Later text weighs more (recency bias).
-- Change **temperature** or **top_p**, not both. Low temperature (about 0.2) for facts. Higher (about 0.7) for creative text.
-- Stop here when you only need tone, format, or instructions. It cannot supply private or post-cutoff facts, and long prompts cost tokens.
+- Where the model supports them, adjust **temperature** or **top_p** one at a time. Lower temperature reduces sampling variation; it does not make an answer factually correct. Check [reasoning-model parameter support](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/reasoning) before sending these settings.
+- Start here for tone, format, and instructions. You can include private or recent facts as prompt context, but prompting alone does not retrieve them automatically. Use RAG when that context must be found from a data source; long prompts also cost tokens.

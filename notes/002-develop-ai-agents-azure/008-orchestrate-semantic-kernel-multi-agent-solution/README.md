@@ -2,6 +2,8 @@
 
 [orchestrate-semantic-kernel-multi-agent-solution](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/)
 
+Reviewed **2026-11-07**. The URL and folder retain `semantic-kernel`, while the current module teaches Microsoft Agent Framework. Examples are aligned to the official lab's `agent-framework-core==1.12.1`, `agent-framework-foundry==1.10.3`, and `agent-framework-orchestrations==1.0.1`. Use the [exercise setup](09-exercise.md) for packages and environment variables.
+
 | Sequence | Unit | Notes |
 | --- | --- | --- |
 | 01 | Introduction | |
@@ -12,3 +14,4 @@
 | 06 | [Use group chat orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/6-use-group-chat-orchestration?pivots=text) | [06-use-group-chat-orchestration.md](06-use-group-chat-orchestration.md) |
 | 07 | [Use handoff orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/7-use-handoff-orchestration?pivots=text) | [07-use-handoff-orchestration.md](07-use-handoff-orchestration.md) |
 | 08 | [Use Magentic orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/8-use-magentic-orchestration?pivots=text) | [08-use-magentic-orchestration.md](08-use-magentic-orchestration.md) |
+| 09 | [Develop a multi-agent solution](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/9-exercise) | [09-exercise.md](09-exercise.md) |

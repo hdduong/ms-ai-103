@@ -11,6 +11,8 @@
 
 `ConcurrentBuilder` is in `agent_framework.orchestrations`. The builder fans the prompt out to every participant and fans the replies back in. Pattern from the [Agent Framework orchestration samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/orchestrations).
 
+Use the pinned packages and `.env` from [09-exercise.md](09-exercise.md). This is a supplementary pattern example; the official lab itself implements the sequential feedback pipeline.
+
 ```python
 import asyncio
 import os
@@ -18,11 +20,13 @@ from agent_framework import Agent, AgentResponse
 from agent_framework.foundry import FoundryChatClient
 from agent_framework.orchestrations import ConcurrentBuilder
 from azure.identity import AzureCliCredential
+from dotenv import load_dotenv
 
 async def main():
+    load_dotenv()
     client = FoundryChatClient(
-        project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
-        model=os.environ["FOUNDRY_MODEL"],  # deployment name
+        project_endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+        model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],  # deployment name
         credential=AzureCliCredential(),
     )
     security = Agent(client=client, name="security", instructions="Review the design for security risks only.")

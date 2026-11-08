@@ -8,7 +8,7 @@
 - Read `completion.choices[0].message.content`. There is no `output_text` and no `previous_response_id`.
 - Next turn: append the assistant reply, append the new user message, and send the whole list again.
 
-The portal has no Chat Completions screen. **Continue in code** generates `responses.create` with `input`, which is unit 04.
+The current [playground unit](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/02-chat-playground?pivots=text) describes selecting **Responses** or **Chat Completions** when generating code. Inspect the selected API and generated request fields; the portal UI can change. The [chat exercise](06-exercise-chat-app.md) implements both APIs.
 
 ## One reply
 

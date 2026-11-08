@@ -2,7 +2,7 @@
 
 [How to integrate custom tools](https://learn.microsoft.com/en-us/training/modules/build-agent-with-custom-tools/4-how-use-custom-tools?pivots=text)
 
-- The agent is declarative. A clear name and parameter description is what makes it call the tool. You do not write the if-statement that calls it.
+- The model selects a tool using its name, description, and parameter schema. For a local function tool, your application dispatches the returned `function_call` to the allowed Python function and submits its result. Hosted OpenAPI/Azure Function tools have different execution plumbing.
 - `model` is the deployment name.
 
 ## Function tool
@@ -33,7 +33,7 @@ function_tool = FunctionTool(
     strict=True,
 )
 agent = project_client.agents.create_version(
-    name="snowfall-agent",
+    agent_name="snowfall-agent",
     definition=PromptAgentDefinition(
         model="gpt-4.1",  # deployment name
         instructions="You track snowfall. Use the function when a city is asked.",
@@ -84,7 +84,7 @@ tool = AzureFunctionTool(
     ),
 )
 agent = project_client.agents.create_version(
-    name="snowfall-function-agent",
+    agent_name="snowfall-function-agent",
     definition=PromptAgentDefinition(
         model="gpt-4.1",  # deployment name
         instructions="Use the Azure Function when a city is asked.",
@@ -96,7 +96,7 @@ print(agent.name)
 
 ## OpenAPI tool
 
-The JSON file is the HTTP API. This one is `GET https://wttr.in/{location}?format=j1`. `auth: []` means no key. Foundry reads the spec and sends the request. Auth on the tool is anonymous, an API key, or a managed identity.
+The JSON file describes the HTTP API: here, `GET https://wttr.in/{location}?format=j1`. Foundry reads the specification and invokes the API. `security: []` is the standard OpenAPI declaration for no authentication requirement; the tool separately uses `OpenApiAnonymousAuthDetails`. Other supported tool authentication options include an API key or managed identity. A top-level `auth: []` is not an OpenAPI security declaration.
 
 The Learn sample assigns the object to `tool` and then passes `openapi_tool`. That second name is not defined. Pass `tool`.
 
@@ -105,6 +105,7 @@ The Learn sample assigns the object to `tool` and then passes `openapi_tool`. Th
   "openapi": "3.0.0",
   "info": {"title": "get weather data", "version": "v1.0.0"},
   "servers": [{"url": "https://wttr.in"}],
+  "security": [],
   "paths": {
     "/{location}": {
       "get": {
@@ -112,7 +113,8 @@ The Learn sample assigns the object to `tool` and then passes `openapi_tool`. Th
         "parameters": [
           {"name": "location", "in": "path", "required": true, "schema": {"type": "string"}},
           {"name": "format", "in": "query", "required": true, "schema": {"type": "string", "default": "j1"}}
-        ]
+        ],
+        "responses": {"200": {"description": "Weather response", "content": {"application/json": {"schema": {"type": "object"}}}}}
       }
     }
   }
@@ -140,7 +142,7 @@ tool = OpenApiTool(
     ),
 )
 agent = project_client.agents.create_version(
-    name="openapi-agent",
+    agent_name="openapi-agent",
     definition=PromptAgentDefinition(
         model="gpt-4.1",  # deployment name
         instructions="You are a weather assistant. Use the API to fetch weather data.",
@@ -152,43 +154,6 @@ print(agent.name)
 
 ## Exercise: run the function the agent picked
 
-Lab: [Use a custom function in an AI agent](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/02-agent-custom-tools.html). The model returns `function_call`. Your code runs it and sends `function_call_output` on the same conversation.
+[The complete astronomy exercise](05-exercise-custom-functions.md) includes all three functions, strict schemas, environment setup, the full dispatch loop, verification prompts, and cleanup. Its loop repeatedly handles `function_call` items, dispatches only names in an allowlist, and returns each result under the matching `call_id` on the same conversation.
 
-```python
-import json
-from openai.types.responses.response_input_param import FunctionCallOutput
-
-conversation = openai_client.conversations.create()
-openai_client.conversations.items.create(
-    conversation_id=conversation.id,
-    items=[{"type": "message", "role": "user", "content": user_input}],
-)
-input_list = []
-response = openai_client.responses.create(
-    conversation=conversation.id,
-    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    input=input_list,
-)
-for item in response.output:
-    if item.type == "function_call":
-        if item.name == "next_visible_event":
-            result = next_visible_event(**json.loads(item.arguments))
-        elif item.name == "calculate_observation_cost":
-            result = calculate_observation_cost(**json.loads(item.arguments))
-        elif item.name == "generate_observation_report":
-            result = generate_observation_report(**json.loads(item.arguments))
-        input_list.append(
-            FunctionCallOutput(
-                type="function_call_output",
-                call_id=item.call_id,
-                output=result,
-            )
-        )
-if input_list:
-    response = openai_client.responses.create(
-        conversation=conversation.id,
-        input=input_list,
-        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    )
-print(response.output_text)
-```
+The snippets above illustrate tool definitions and assume `project_client` already exists. Use `agent_name=`, which is the current `create_version` parameter in the lab's `azure-ai-projects==2.3.0` SDK. Snowfall values in the local example are mock data.

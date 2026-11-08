@@ -42,6 +42,8 @@ response = requests.post(
     url,
     headers={"Authorization": f"Bearer {token}"},
     json={"input": "Say hello"},
+    timeout=60,
 )
+response.raise_for_status()
 print(response.status_code, response.json())
 ```

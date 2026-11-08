@@ -28,10 +28,12 @@ project_client = AIProjectClient(
     credential=DefaultAzureCredential(),
     endpoint=project_endpoint,
 )
-openai_client = project_client.get_openai_client(api_version="2024-10-21")
+openai_client = project_client.get_openai_client()
 ```
 
 Run `az login` first. `openai` is required because chat goes through `get_openai_client()`.
+
+**SDK version note (2026-11-07):** The Learn unit still shows a dated `api_version` on this call. The current [AIProjectClient reference](https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python) describes `get_openai_client()` as constructing an OpenAI client with the project endpoint plus `/openai/v1/`; its extra keyword arguments are forwarded to that client. Use the v1 call above rather than copying the dated argument into a current SDK environment. Keep dependencies aligned with the exercise you are running; these package names are not a version lock.
 
 ## OpenAI SDK
 
@@ -59,6 +61,8 @@ openai_client = OpenAI(
 Use `AzureOpenAI` only for a specific API version. That endpoint has no `/openai/v1`, and you pass `api_version`.
 
 ## Non-Azure OpenAI model
+
+This example requires a deployment and endpoint that support the Responses API. Check the model card and API support; OpenAI-compatible endpoints do not imply that every model supports every API. For complete environment setup and the current lab deployment, see [Exercise: Create a chat app](06-exercise-chat-app.md).
 
 ```python
 response = openai_client.responses.create(

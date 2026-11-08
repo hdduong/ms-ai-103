@@ -4,19 +4,20 @@
 
 - `AgentExecutor` is the protocol side of your logic. It does not decide discovery. The card does that.
 - `execute` reads `RequestContext`, runs your code, and puts messages, task updates, or artifacts on the `EventQueue`.
-- `cancel` stops a running task. A simple agent can refuse it.
+- `cancel` handles a cancellation request. It must actually stop the underlying operation when supported, or return a protocol error. Emitting a cancelled/failed status alone does not stop a backend Azure run.
 - Flow: request comes in, executor calls your helper, the result becomes an event, the server sends the event back.
 
 ## Execute and cancel
 
-Lab: [Connect to remote agents with A2A](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/09-multi-remote-agents-with-a2a.html). The title agent's executor reports progress with a `TaskUpdater`, runs the Foundry agent, then completes the task with the last reply. `self.agent` is the lab's title agent wrapper.
+Lab: [Connect to remote agents with A2A](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/09-multi-remote-agents-with-a2a.html). The title agent's executor reports progress with a `TaskUpdater`, runs the Foundry agent, then completes the task with the last reply. `self.agent` is the lab's title agent wrapper. This is a constructor-injection teaching excerpt, not the exact starter file. [06-exercise.md](06-exercise.md) supplies the complete integrated executor and setup.
 
 ```python
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events.event_queue import EventQueue
 from a2a.server.tasks import TaskUpdater
-from a2a.types import TaskState
+from a2a.types import TaskNotCancelableError, TaskState
 from a2a.utils import new_agent_text_message, new_task
+from a2a.utils.errors import ServerError
 
 class TitleAgentExecutor(AgentExecutor):
     def __init__(self, agent):
@@ -37,5 +38,5 @@ class TitleAgentExecutor(AgentExecutor):
         )
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
-        raise Exception("cancel not supported")
+        raise ServerError(error=TaskNotCancelableError())
 ```

@@ -6,9 +6,9 @@
 - Call it from the OpenAI-compatible client (Foundry SDK or OpenAI SDK).
 - `input` is the user prompt. `instructions` is the system prompt.
 - Read `output_text`, `id`, `status`, `usage.total_tokens`, and `model`.
-- `temperature` is 0.0–2.0 (higher is more varied). `max_output_tokens` caps length. `top_p` is the other randomness control.
-- `model` is the deployment name. The same call works for a Foundry direct model such as Phi or DeepSeek.
-- Next turn: pass `previous_response_id`. That includes prior context and uses more tokens.
+- Where supported, `temperature` is 0.0–2.0 (higher is more varied); `top_p` is another sampling control. Support is model-specific, especially for [reasoning models](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/reasoning). `max_output_tokens` can include reasoning tokens as well as visible output, so it is not simply a word limit.
+- `model` is the deployment name. Use this request shape for a Foundry direct model only when that model and endpoint support Responses; check its model card.
+- Next turn: pass `previous_response_id`. That includes prior context and uses more tokens. Resend `instructions`; the earlier response's instructions are not automatically inherited.
 - Or keep history yourself: `input` is a list of messages, then append `response.output`.
 - Load an old turn with `responses.retrieve(response_id)`.
 - Stream with `stream=True`. Print `event.delta` when `event.type == "response.output_text.delta"`. The id is on `response.completed`.
@@ -28,7 +28,7 @@ print(response.output_text)
 print(response.id, response.status, response.usage.total_tokens)
 ```
 
-This is that call, run against deployment `gpt-4.1`. `max_output_tokens` is 200, so the reply stops early and `status` is `incomplete`.
+The saved screenshot shows this call against `gpt-4.1` reaching the 200-token output cap with `status` `incomplete`; the outcome is not guaranteed for every prompt/run. The [current exercise](06-exercise-chat-app.md) uses `gpt-5.2` with its supported request parameters.
 
 ![Console run of the Responses sample: input and output](images/04-run.png)
 

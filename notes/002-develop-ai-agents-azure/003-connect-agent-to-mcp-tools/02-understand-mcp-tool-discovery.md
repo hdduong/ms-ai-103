@@ -2,8 +2,8 @@
 
 [Understand MCP tool discovery](https://learn.microsoft.com/en-us/training/modules/connect-agent-to-mcp-tools/2-understand-mcp-tool-discovery?pivots=text)
 
-- MCP is a live catalog. The agent asks the server which tools exist. You do not hard-code each API, and you do not redeploy the agent when a tool changes.
-- Exam benefits: dynamic discovery, the same tools across models, one auth pattern instead of a key per API.
+- MCP lets a client discover a server's tool names, descriptions, and parameter schemas. A client can avoid hand-writing each API adapter, but it must refresh discovery when tools change. The local exercise registers discovered schemas in an agent version, so a schema change can require an updated definition.
+- Benefits: dynamic discovery and reusable tool interfaces across clients/models. Authentication still depends on each server and its deployment; MCP does not eliminate authorization or all service-specific credentials.
 - The server hosts tools with `@mcp.tool`. The client calls `session.list_tools()`, wraps each one, and the agent calls them.
 
 ## Server
@@ -27,3 +27,5 @@ def get_weekly_sales() -> dict:
 
 mcp.run(show_banner=False)
 ```
+
+The small server above is illustrative. [The complete exercise](05-exercise-mcp-tools.md) includes the upstream inventory, runnable local client, and remote Microsoft Learn MCP example.

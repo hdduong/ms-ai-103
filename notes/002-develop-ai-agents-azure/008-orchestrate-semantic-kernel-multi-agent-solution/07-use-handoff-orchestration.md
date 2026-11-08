@@ -5,11 +5,13 @@
 - One agent works, then passes the conversation to a specialist. The next agent is not known at the start.
 - Use it when the domain shows up in the text (billing versus technical) and you can name the handoff rule.
 - Skip it when the order is fixed, a simple rule is enough, a wrong route annoys the user, work must run in parallel, or agents can bounce forever.
-- Implementation is a classifier with structured JSON, then a switch-case edge. Always include a default case.
+- The Learn unit illustrates deterministic routing with a classifier and switch-case edge; include a default case. The SDK also offers `HandoffBuilder`, where agents can request a transfer through generated handoff tools. These are two ways to design routing, not the same API.
 
 ## Classifier, then a switch-case edge
 
-This is the unit's design in code. The classifier returns typed JSON, a small executor turns it into a route, and `add_switch_case_edge_group` checks the cases in order. `Default` catches anything that does not match. Pattern from the [switch-case control-flow sample](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/control-flow).
+This is the unit's classifier-and-routing design in code. The billing and technical steps below return labels; they do not contact real support teams. The classifier returns typed JSON, a small executor turns it into a route, and `add_switch_case_edge_group` checks the cases in order. `Default` catches anything that does not match. Pattern from the [switch-case control-flow sample](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/control-flow).
+
+Use the pinned packages and `.env` from [09-exercise.md](09-exercise.md). This is a supplementary pattern example; the official lab itself implements the sequential feedback pipeline.
 
 ```python
 import asyncio
@@ -32,6 +34,7 @@ from agent_framework import (
 from agent_framework.foundry import FoundryChatClient
 from agent_framework.openai import OpenAIChatOptions
 from azure.identity import AzureCliCredential
+from dotenv import load_dotenv
 from pydantic import BaseModel
 
 class Route(BaseModel):
@@ -72,11 +75,12 @@ async def fallback(item: Routed, ctx: WorkflowContext[Never, str]) -> None:
     await ctx.yield_output(f"Ask the user to rephrase: {item.text}")
 
 async def main():
+    load_dotenv()
     classifier = AgentExecutor(
         Agent(
             client=FoundryChatClient(
-                project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
-                model=os.environ["FOUNDRY_MODEL"],  # deployment name
+                project_endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+                model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],  # deployment name
                 credential=AzureCliCredential(),
             ),
             name="classifier",

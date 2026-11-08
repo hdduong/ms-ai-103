@@ -4,15 +4,14 @@
 
 - Foundry calls a remote MCP server for you. No `list_tools` and no hand-written wrappers.
 - `MCPTool`: `server_label`, `server_url`, optional `allowed_tools`, optional `require_approval`. Headers carry API keys or OAuth tokens. One tool object per server.
-- Approval: `always` is the default and pauses for a person. `never` runs the tool. If approval is required, the response has `mcp_approval_request`. Reply with `mcp_approval_response` (`approval_request_id` and `approve`).
+- Approval: `always` requires an approval response; `never` allows execution without one. These are strings, not booleans. When the response contains `mcp_approval_request`, the client supplies `mcp_approval_response` with `approval_request_id` and `approve`. Your application implements the user decision or an explicit automatic policy.
 
 ## Remote MCP tool
 
-Lab server is the Microsoft Learn docs MCP endpoint. `require_approval="always"` means the first response is an `mcp_approval_request`, not the answer.
+The exercise uses the public Microsoft Learn MCP endpoint. Set `require_approval="always"` to request approval when the model chooses a tool. A response can contain an `mcp_approval_request`; the model can also answer without a tool, so this is not a guarantee that the first response always requests approval.
 
 ```python
 from azure.ai.projects.models import MCPTool, PromptAgentDefinition
-from openai.types.responses.response_input_param import McpApprovalResponse
 
 mcp_tool = MCPTool(
     server_label="api-specs",
@@ -22,34 +21,11 @@ mcp_tool = MCPTool(
 agent = project_client.agents.create_version(
     agent_name="MyAgent",
     definition=PromptAgentDefinition(
-        model="gpt-4.1",  # deployment name
-        instructions="Use the available MCP tools to answer questions.",
+        model="gpt-5",  # Your deployed model name.
+        instructions="Use Microsoft Learn MCP tools for current Azure documentation.",
         tools=[mcp_tool],
     ),
 )
-conversation = openai_client.conversations.create()
-response = openai_client.responses.create(
-    conversation=conversation.id,
-    input="Give me the Azure CLI commands to create an Azure Container App with a managed identity.",
-    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-)
-while True:
-    input_list = []
-    for item in response.output:
-        if item.type == "mcp_approval_request" and item.server_label == "api-specs" and item.id:
-            input_list.append(
-                McpApprovalResponse(
-                    type="mcp_approval_response",
-                    approve=True,
-                    approval_request_id=item.id,
-                )
-            )
-    if not input_list:
-        break
-    response = openai_client.responses.create(
-        input=input_list,
-        previous_response_id=response.id,
-        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    )
-print(response.output_text)
 ```
+
+`project_client` is an initialized `AIProjectClient` in this definition-only fragment. [The complete exercise](05-exercise-mcp-tools.md) includes authentication, a conversation, a human approval/denial loop, execution, and cleanup. The original lab auto-approves requests to its public documentation server; that is a demonstration policy, not a human approval interface.

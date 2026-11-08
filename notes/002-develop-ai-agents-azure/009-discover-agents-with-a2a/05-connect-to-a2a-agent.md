@@ -3,13 +3,13 @@
 [Connect to your A2A agent](https://learn.microsoft.com/en-us/training/modules/discover-agents-with-a2a/5-connect-to-a2a-agent?pivots=text)
 
 - The client needs the server base URL, then fetches the Agent Card, then sends messages.
-- Non-streaming waits for one reply. Streaming returns chunks. Use streaming for a long task.
+- Non-streaming returns one response envelope; a task in it may already be complete or may still be running. Streaming exposes incremental message/task events when supported.
 - A message has a role (`user`) and content, and a unique id.
-- The reply is either a direct message or a task. A task means you poll or follow the stream. Advanced agents run more than one task at a time.
+- A successful result is a direct message or a task. Inspect a task's status before polling or following a stream; do not treat a completed task as ongoing work.
 
 ## One message
 
-The routing agent in the exercise keeps one A2A client per agent card it discovered, in `self.remote_agent_connections`. It builds this payload and awaits `send_message`.
+The routing agent in the exercise keeps one client wrapper per discovered card, in `self.remote_agent_connections`. This helper builds a payload and awaits the wrapper's `send_message`; invoke it from an async caller. See [06-exercise.md](06-exercise.md) for the missing starter blocks and the router's Task-only result checks.
 
 ```python
 import uuid
@@ -31,9 +31,11 @@ async def send_task(client, task: str) -> SendMessageResponse:
     )
     return await client.send_message(message_request=message_request)
 
-client = self.remote_agent_connections[agent_name]
-send_response = await send_task(client, "Create a title for an article about React programming.")
-print(send_response)
+async def ask_title(client):
+    send_response = await send_task(
+        client, "Create a title for an article about React programming."
+    )
+    print(send_response)
 ```
 
-`send_message` waits for the full reply. Leave out the `await` and the routing run never gets the title back.
+`await` obtains the response rather than an unexecuted coroutine. A generic client should handle both protocol success and error envelopes, and both successful result types (`Message` and `Task`).

@@ -4,13 +4,13 @@
 
 - Design the workflow in the portal. Call it by name. You can also download the YAML.
 - `input` is the user text, a ticket, a payload, or an empty string that only starts the flow.
-- Stream events: `response.completed` is the final text. `response.output_item.done` with a workflow action is one node finishing.
+- Stream events: `response.completed` identifies a completed response; retrieve it or read its output text. `response.output_item.done` with a workflow action identifies a completed output item.
 - A human-in-the-loop pause needs another message on the same conversation to continue.
-- `type` is `agent_reference`. This unit puts that object under the key `agent`.
+- The Learn unit shows the reference under `extra_body["agent"]`; the current official exercise uses `extra_body["agent_reference"]`. The example below follows the exercise with `azure-ai-projects==2.3.0` and `openai<3`. Keep the lab's API shape and dependencies together.
 
 ## Invoke
 
-Lab: [Build a workflow in Microsoft Foundry](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/06-build-workflow-ms-foundry.html). The name is the one you saved in the designer. `input="Start"` only starts the flow. The tickets are already in `Local.SupportTickets`.
+Lab: [Build a workflow in Microsoft Foundry](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/06-build-workflow-ms-foundry.html). The name is the one you saved in the designer. `input="Start"` only starts the flow. The tickets are already in `Local.SupportTickets`. This compact excerpt assumes an existing saved workflow; use [09-exercise.md](09-exercise.md) for setup, the complete client with `finally` cleanup, and the portal migration deadline.
 
 ```python
 from azure.ai.projects import AIProjectClient
