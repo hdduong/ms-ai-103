@@ -9,23 +9,40 @@
 
 ## Classify, then answer
 
+Lab: [Develop a multi-agent solution](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/08-agent-framework-multi-agents.html). `as_agent` builds each participant. `output_from="all"` keeps every agent's message.
+
 ```python
 import asyncio
-from agent_framework import Agent, SequentialBuilder
+import os
 from agent_framework.foundry import FoundryChatClient
-from azure.identity import DefaultAzureCredential
+from agent_framework.orchestrations import SequentialBuilder
+from azure.identity import AzureCliCredential
 
 async def main():
-    client = FoundryChatClient(
-        credential=DefaultAzureCredential(),
-        project_endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
-        model="gpt-4.1",  # deployment name
+    chat_client = FoundryChatClient(
+        credential=AzureCliCredential(),
+        project_endpoint=os.getenv("AZURE_AI_PROJECT_ENDPOINT"),
+        model=os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME"),  # deployment name
     )
-    classifier = Agent(client=client, name="Classifier", instructions="Label the ticket billing or technical. One word.")
-    resolver = Agent(client=client, name="Resolver", instructions="Answer the ticket using the label you were given.")
-    workflow = SequentialBuilder(participants=[classifier, resolver]).build()
-    events = await workflow.run("I was charged twice for the same license.")
-    print(events.get_outputs())
+    summarizer_agent = chat_client.as_agent(
+        name="summarizer",
+        instructions="Summarize the customer feedback in two sentences.",
+    )
+    classifier_agent = chat_client.as_agent(
+        name="classifier",
+        instructions="Label the feedback as bug, feature, or praise.",
+    )
+    action_agent = chat_client.as_agent(
+        name="action",
+        instructions="Recommend one product change from the summary and the label.",
+    )
+    workflow = SequentialBuilder(
+        participants=[summarizer_agent, classifier_agent, action_agent],
+        output_from="all",
+    ).build()
+    feedback = "The dashboard works, but the bright screen hurts my eyes at night. Add a dark mode."
+    result = await workflow.run(f"Customer feedback: {feedback}")
+    print(result.get_outputs())
 
 asyncio.run(main())
 ```

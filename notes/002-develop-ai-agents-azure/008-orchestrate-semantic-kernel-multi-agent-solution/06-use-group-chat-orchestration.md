@@ -10,29 +10,42 @@
 
 The Learn page copies the concurrent steps and says the agents run in parallel. They do not. The manager picks one speaker per turn.
 
-## Three turns, then stop
+## Maker-checker with an agent manager
+
+In the current SDK the manager is an agent passed as `orchestrator_agent`. `termination_condition` is the hard stop if the manager keeps going. The output is the whole transcript. Pattern from the [Agent Framework orchestration samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/orchestrations).
 
 ```python
 import asyncio
-from agent_framework import Agent, GroupChatBuilder
+import os
+from agent_framework import Agent
 from agent_framework.foundry import FoundryChatClient
-from azure.identity import DefaultAzureCredential
+from agent_framework.orchestrations import GroupChatBuilder
+from azure.identity import AzureCliCredential
 
 async def main():
     client = FoundryChatClient(
-        credential=DefaultAzureCredential(),
-        project_endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
-        model="gpt-4.1",  # deployment name
+        project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+        model=os.environ["FOUNDRY_MODEL"],  # deployment name
+        credential=AzureCliCredential(),
     )
-    manager = Agent(client=client, name="Manager", instructions="Pick the next speaker. Stop when the reply is good enough.")
-    writer = Agent(client=client, name="Writer", instructions="Draft a short reply to the ticket.")
-    reviewer = Agent(client=client, name="Reviewer", instructions="Say what the draft got wrong.")
+    manager = Agent(
+        client=client,
+        name="Manager",
+        description="Picks the next speaker",
+        instructions="Writer drafts first, then Reviewer checks it. Finish when Reviewer has no changes.",
+    )
+    writer = Agent(client=client, name="Writer", description="Drafts the reply", instructions="Draft a short reply to the support ticket.")
+    reviewer = Agent(client=client, name="Reviewer", description="Checks the draft", instructions="Say what the draft got wrong, or say it is ready.")
     workflow = GroupChatBuilder(
         participants=[writer, reviewer],
         orchestrator_agent=manager,
-    ).with_max_rounds(3).build()
-    events = await workflow.run("Users can't reset their password from the mobile app.")
-    print(events.get_outputs())
+        termination_condition=lambda messages: sum(1 for m in messages if m.role == "assistant") >= 4,
+    ).build()
+    result = await workflow.run("Users can't reset their password from the mobile app.")
+    for transcript in result.get_outputs():
+        if isinstance(transcript, list):
+            for message in transcript:
+                print(message.author_name or message.role, message.text)
 
 asyncio.run(main())
 ```

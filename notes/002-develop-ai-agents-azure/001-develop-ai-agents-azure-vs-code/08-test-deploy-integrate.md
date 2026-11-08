@@ -12,6 +12,10 @@
 
 ## Published endpoint
 
+The agent's **Details** tab shows the Entra agent identity, the blueprint, and the Responses endpoint.
+
+![it-support-agent Details: Running status, active version, Entra agent identity and blueprint, and the Responses protocol endpoint. IDs are masked.](images/08-agent-details.png)
+
 ```text
 POST https://{resource-name}.services.ai.azure.com/api/projects/<project-name>/agents/healthcare-assistant/endpoint/protocols/openai/responses?api-version=2025-11-15-preview
 Authorization: Bearer <token from az account get-access-token --resource https://ai.azure.com>
@@ -21,3 +25,23 @@ Content-Type: application/json
 ```
 
 `model` is not on this call. The agent already has the deployment.
+
+The same call from Python. The token scope is `https://ai.azure.com/.default`, and the caller needs **Foundry User** on the agent.
+
+```python
+import requests
+from azure.identity import DefaultAzureCredential
+
+token = DefaultAzureCredential().get_token("https://ai.azure.com/.default").token
+url = (
+    "https://{resource-name}.services.ai.azure.com/api/projects/<project-name>"
+    "/agents/it-support-agent/endpoint/protocols/openai/responses"
+    "?api-version=2025-11-15-preview"
+)
+response = requests.post(
+    url,
+    headers={"Authorization": f"Bearer {token}"},
+    json={"input": "Say hello"},
+)
+print(response.status_code, response.json())
+```

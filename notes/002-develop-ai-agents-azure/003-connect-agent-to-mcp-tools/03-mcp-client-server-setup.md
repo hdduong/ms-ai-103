@@ -9,7 +9,22 @@
 ## Client
 
 ```python
+from mcp import ClientSession
+from mcp.client.stdio import stdio_client
+
+stdio_transport = await exit_stack.enter_async_context(stdio_client(server_params))
+stdio, write = stdio_transport
+session = await exit_stack.enter_async_context(ClientSession(stdio, write))
+await session.initialize()
 listed = await session.list_tools()
-result = await session.call_tool("recent_snowfall", {"location": "Denver"})
-print(result)
+tools = listed.tools
+print([tool.name for tool in tools])
+
+def make_tool_func(tool_name):
+    async def tool_func(**kwargs):
+        return await session.call_tool(tool_name, kwargs)
+    tool_func.__name__ = tool_name
+    return tool_func
+
+functions_dict = {tool.name: make_tool_func(tool.name) for tool in tools}
 ```

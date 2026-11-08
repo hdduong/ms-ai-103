@@ -9,3 +9,16 @@
 - Other channels: a web preview, the stable Responses endpoint, and Bot Service channels (Slack, Telegram, Twilio SMS, Facebook).
 - The published identity is not the project identity. Re-grant roles for Azure AI Search and any other tool resource.
 - Roles: **Azure AI Project Manager** to publish, **Azure AI User** to chat. You also need rights to create a Bot Service resource and to register an Entra app. A Microsoft 365 tenant that allows custom apps. A **Microsoft Agent 365** license covers discovery and Defender posture.
+
+The agent's **Details** tab lists the endpoints and channels. Teams and Microsoft 365 Copilot is a separate **Publish**. The preview web app is already on.
+
+![it-support-agent Details: Responses and A2A endpoints, then Channels with Teams & Microsoft 365 Copilot (Publish) and Preview web app (Active).](images/02-agent-channels.png)
+
+The Teams exercise sets these instructions before publish:
+
+```text
+You are an Enterprise Knowledge Assistant for Contoso Corporation.
+Answer questions about company policies from the uploaded documents.
+If you don't know, say so.
+Always cite the policy.
+```

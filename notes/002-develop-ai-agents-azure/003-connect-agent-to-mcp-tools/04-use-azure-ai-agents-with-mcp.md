@@ -8,35 +8,48 @@
 
 ## Remote MCP tool
 
+Lab server is the Microsoft Learn docs MCP endpoint. `require_approval="always"` means the first response is an `mcp_approval_request`, not the answer.
+
 ```python
 from azure.ai.projects.models import MCPTool, PromptAgentDefinition
+from openai.types.responses.response_input_param import McpApprovalResponse
 
 mcp_tool = MCPTool(
-    server_label="github",
-    server_url="https://api.githubcopilot.com/mcp/",
+    server_label="api-specs",
+    server_url="https://learn.microsoft.com/api/mcp",
     require_approval="always",
 )
 agent = project_client.agents.create_version(
-    name="github-agent",
+    agent_name="MyAgent",
     definition=PromptAgentDefinition(
         model="gpt-4.1",  # deployment name
-        instructions="Use the GitHub MCP tools when the user asks about a repository.",
+        instructions="Use the available MCP tools to answer questions.",
         tools=[mcp_tool],
     ),
 )
-print(agent.name)
-```
-
-## Approval reply
-
-```python
-openai_client.responses.create(
+conversation = openai_client.conversations.create()
+response = openai_client.responses.create(
     conversation=conversation.id,
-    input=[{
-        "type": "mcp_approval_response",
-        "approval_request_id": approval_request_id,
-        "approve": True,
-    }],
-    extra_body={"agent": {"name": agent.name, "type": "agent_reference"}},
+    input="Give me the Azure CLI commands to create an Azure Container App with a managed identity.",
+    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
 )
+while True:
+    input_list = []
+    for item in response.output:
+        if item.type == "mcp_approval_request" and item.server_label == "api-specs" and item.id:
+            input_list.append(
+                McpApprovalResponse(
+                    type="mcp_approval_response",
+                    approve=True,
+                    approval_request_id=item.id,
+                )
+            )
+    if not input_list:
+        break
+    response = openai_client.responses.create(
+        input=input_list,
+        previous_response_id=response.id,
+        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+    )
+print(response.output_text)
 ```

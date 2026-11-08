@@ -8,3 +8,16 @@
 - Mitigations: RBAC and least privilege, prompt filtering, human approval for sensitive actions, logs, audit of third-party tools, retrain when data drifts.
 - Foundry Agent Service is managed. You do not run the compute. It calls tools, stores conversation state, and applies content filters.
 - **Declarative** agents are configuration. A prompt agent is one model, instructions, and tools. A workflow agent is multi-agent YAML. A **hosted** agent is your container, and Foundry runs it. This module is the prompt agent.
+
+![Build > Agents. Both agents are Prompt type. Workflows has its own tab.](images/02-agents-list.png)
+
+The module exercise calls the saved agent by name. The model stays on the agent.
+
+```python
+response = openai_client.responses.create(
+    conversation=conversation.id,
+    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+    input="",
+)
+print(response.output_text)
+```

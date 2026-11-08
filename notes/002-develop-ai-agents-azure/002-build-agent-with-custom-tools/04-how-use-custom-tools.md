@@ -149,3 +149,46 @@ agent = project_client.agents.create_version(
 )
 print(agent.name)
 ```
+
+## Exercise: run the function the agent picked
+
+Lab: [Use a custom function in an AI agent](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/02-agent-custom-tools.html). The model returns `function_call`. Your code runs it and sends `function_call_output` on the same conversation.
+
+```python
+import json
+from openai.types.responses.response_input_param import FunctionCallOutput
+
+conversation = openai_client.conversations.create()
+openai_client.conversations.items.create(
+    conversation_id=conversation.id,
+    items=[{"type": "message", "role": "user", "content": user_input}],
+)
+input_list = []
+response = openai_client.responses.create(
+    conversation=conversation.id,
+    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+    input=input_list,
+)
+for item in response.output:
+    if item.type == "function_call":
+        if item.name == "next_visible_event":
+            result = next_visible_event(**json.loads(item.arguments))
+        elif item.name == "calculate_observation_cost":
+            result = calculate_observation_cost(**json.loads(item.arguments))
+        elif item.name == "generate_observation_report":
+            result = generate_observation_report(**json.loads(item.arguments))
+        input_list.append(
+            FunctionCallOutput(
+                type="function_call_output",
+                call_id=item.call_id,
+                output=result,
+            )
+        )
+if input_list:
+    response = openai_client.responses.create(
+        conversation=conversation.id,
+        input=input_list,
+        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+    )
+print(response.output_text)
+```

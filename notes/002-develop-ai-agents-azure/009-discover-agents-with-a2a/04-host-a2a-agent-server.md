@@ -9,18 +9,24 @@
 
 ## Starlette and Uvicorn
 
+From the lab's `title_agent/server.py`. `agent_card` is the card from unit 02. `build()` turns the A2A app into a Starlette app, and Uvicorn serves it.
+
 ```python
 import uvicorn
 from a2a.server.apps import A2AStarletteApplication
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
 
-handler = DefaultRequestHandler(
-    agent_executor=TitleExecutor(),
+agent_executor = create_foundry_agent_executor(agent_card)
+request_handler = DefaultRequestHandler(
+    agent_executor=agent_executor,
     task_store=InMemoryTaskStore(),
 )
-server = A2AStarletteApplication(agent_card=card, http_handler=handler)
-uvicorn.run(server.build(), host="0.0.0.0", port=9000)
+a2a_app = A2AStarletteApplication(
+    agent_card=agent_card,
+    http_handler=request_handler,
+)
+uvicorn.run(a2a_app.build(), host=host, port=port)
 ```
 
-`card` is the Agent Card from unit 02. `TitleExecutor` is the executor from unit 03.
+After it starts, `http://{host}:{port}/.well-known/agent-card.json` returns the card.

@@ -10,19 +10,31 @@
 
 ## Invoke
 
+Lab: [Build a workflow in Microsoft Foundry](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/06-build-workflow-ms-foundry.html). The name is the one you saved in the designer. `input="Start"` only starts the flow. The tickets are already in `Local.SupportTickets`.
+
 ```python
-conversation = openai_client.conversations.create()
-stream = openai_client.responses.create(
-    conversation=conversation.id,
-    extra_body={"agent": {"name": "triage-workflow", "type": "agent_reference"}},
-    input="Users can't reset their password from the mobile app.",
-    stream=True,
-)
-for event in stream:
-    if event.type == "response.completed":
-        for message in event.response.output:
-            if message.content:
-                for content_item in message.content:
-                    if content_item.type == "output_text":
-                        print(content_item.text)
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
+
+workflow = {"name": "ContosoPay-Customer-Support-Triage"}
+with (
+    DefaultAzureCredential() as credential,
+    AIProjectClient(
+        endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
+        credential=credential,
+    ) as project_client,
+    project_client.get_openai_client() as openai_client,
+):
+    conversation = openai_client.conversations.create()
+    stream = openai_client.responses.create(
+        conversation=conversation.id,
+        extra_body={"agent_reference": {"name": workflow["name"], "type": "agent_reference"}},
+        input="Start",
+        stream=True,
+    )
+    for event in stream:
+        if event.type == "response.completed":
+            response = openai_client.responses.retrieve(event.response.id)
+            print(response.output_text)
+    openai_client.conversations.delete(conversation_id=conversation.id)
 ```

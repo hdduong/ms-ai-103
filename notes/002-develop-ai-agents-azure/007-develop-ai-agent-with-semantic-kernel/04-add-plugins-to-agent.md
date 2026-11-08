@@ -11,32 +11,41 @@
 
 ## A function tool
 
+The exercise tool prints the email. `approval_mode="never_require"` lets the agent send it without a pause.
+
 ```python
 import asyncio
+import os
 from typing import Annotated
 from agent_framework import Agent, tool
 from agent_framework.foundry import FoundryChatClient
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential
+from pydantic import Field
 
 @tool(approval_mode="never_require")
-def recent_snowfall(location: Annotated[str, "City name."]) -> str:
-    """Get recent snowfall totals for a city."""
-    totals = {"Seattle": "0 inches", "Denver": "2 inches"}
-    return totals.get(location, "Data not available.")
+def submit_claim(
+    to: Annotated[str, Field(description="Who to send the email to")],
+    subject: Annotated[str, Field(description="The subject of the email.")],
+    body: Annotated[str, Field(description="The text body of the email.")],
+):
+    print("To:", to)
+    print("Subject:", subject)
+    print(body)
 
 async def main():
-    agent = Agent(
-        client=FoundryChatClient(
-            credential=DefaultAzureCredential(),
-            project_endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
-            model="gpt-4.1",  # deployment name
-        ),
-        name="snowfall-agent",
-        instructions="Use recent_snowfall when a city is asked.",
-        tools=[recent_snowfall],
+    client = FoundryChatClient(
+        project_endpoint=os.getenv("PROJECT_ENDPOINT"),
+        model=os.getenv("MODEL_DEPLOYMENT_NAME"),  # deployment name
+        credential=AzureCliCredential(),
     )
-    response = await agent.run("How much snow fell in Denver?")
-    print(response.text)
+    async with Agent(
+        client=client,
+        name="ExpenseClaimAgent",
+        instructions="Create an expense claim and use the tool to email expenses@contoso.com. Subject is Expense Claim. Do not ask for more information.",
+        tools=[submit_claim],
+    ) as agent:
+        response = await agent.run("Submit this claim: taxi 42, lunch 18.")
+        print(response)
 
 asyncio.run(main())
 ```

@@ -10,38 +10,57 @@
 - In production, watch citation rate, how often it says it does not know, and whether the retrieved docs actually answer the question.
 - `type` is `agent_reference`. This unit puts that object under the key `agent`. The call runs the saved agent, so there is no `model` argument here.
 
-## Instructions
+## Instructions from the exercise
+
+The lab sets these instructions on the agent, then adds Foundry IQ under Knowledge. The client does not pass `model`. It passes `agent_reference`.
+
+![product-expert-agent instructions: always search the knowledge base for product questions and cite sources.](images/05-agent-instructions.png)
+
+The knowledge base has its own retrieval settings: the chat model that plans queries, **Retrieval reasoning effort**, and **Retrieval instructions** that say which source to try first.
+
+![knowledgebase301 settings: gpt-5 as the planning model, retrieval reasoning effort Minimal, retrieval instructions, and the knowledge sources.](images/05-knowledge-base-config.png)
 
 ```python
-from azure.ai.projects.models import PromptAgentDefinition
-
 instructions = """
-You are an HR assistant.
-Always search the knowledge base before you answer.
-Never answer from training data.
-Cite each fact as 【doc_id:search_id†source_name】.
-If the base has no answer, say you do not have it and tell the user to contact HR.
+You are a helpful AI assistant for Contoso, specializing in outdoor camping and hiking products.
+You must ALWAYS search the knowledge base to answer questions about our products or product catalog.
+Provide detailed, accurate information and always cite your sources.
+If you don't find relevant information in the knowledge base, say so clearly.
 """
-agent = project_client.agents.create_version(
-    name="hr-assistant",
-    definition=PromptAgentDefinition(
-        model="gpt-4.1",  # deployment name
-        instructions=instructions,
-        tools=[knowledge_tool],
-    ),
-)
-print(agent.name)
+print(instructions)
 ```
 
-## Test one question
+## Ask, then approve the knowledge-base call
 
 ```python
-openai_client = project_client.get_openai_client()
-conversation = openai_client.conversations.create()
+openai_client.conversations.items.create(
+    conversation_id=conversation.id,
+    items=[{"type": "message", "role": "user", "content": "What tents does Contoso sell?"}],
+)
 response = openai_client.responses.create(
     conversation=conversation.id,
-    input="How many vacation days do I get?",
-    extra_body={"agent": {"name": agent.name, "type": "agent_reference"}},
+    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+    input="",
 )
+while True:
+    approval_requests = [
+        item for item in (response.output or [])
+        if item.type == "mcp_approval_request"
+    ]
+    if not approval_requests:
+        break
+    openai_client.conversations.items.create(
+        conversation_id=conversation.id,
+        items=[{
+            "type": "mcp_approval_response",
+            "approval_request_id": item.id,
+            "approve": True,
+        } for item in approval_requests],
+    )
+    response = openai_client.responses.create(
+        conversation=conversation.id,
+        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+        input="",
+    )
 print(response.output_text)
 ```

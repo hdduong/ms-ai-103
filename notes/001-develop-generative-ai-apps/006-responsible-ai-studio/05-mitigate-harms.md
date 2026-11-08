@@ -8,5 +8,10 @@ Four layers. After a change, measure again against the baseline.
 2. **Safety system.** Foundry guardrails. Content filters use four categories — hate and fairness, sexual, violence, self-harm — and four severities: safe, low, medium, high. The default guardrail blocks Hate, Self-harm, Sexual, and Violence at **Medium** on user input and on output. Task-adherence keeps an agent on the user's intent. Prompt shields (jailbreak) look for attempts to override the system prompt.
 
 ![Default content safety filters. Four categories at Medium, action Block, on user input and output.](images/05-content-filters.png)
+
+A new guardrail also has the attack controls: **Jailbreak** on user input, **Indirect prompt injections** on tool results, and **Network** egress rules, which only apply to hosted agents.
+
+![Create guardrail: Jailbreak blocked on user input, Network egress rules, Indirect prompt injections, then Content harms.](images/05-guardrail-create.png)
+
 3. **System message and grounding.** Behavior rules, grounded prompts, and RAG from trusted data.
 4. **User experience.** Limit what the user can send, validate input and output, and document what the system can and cannot do and which harms can still get through.

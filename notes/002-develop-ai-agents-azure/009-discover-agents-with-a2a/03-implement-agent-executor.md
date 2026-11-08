@@ -9,19 +9,33 @@
 
 ## Execute and cancel
 
+Lab: [Connect to remote agents with A2A](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/09-multi-remote-agents-with-a2a.html). The title agent's executor reports progress with a `TaskUpdater`, runs the Foundry agent, then completes the task with the last reply. `self.agent` is the lab's title agent wrapper.
+
 ```python
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events.event_queue import EventQueue
+from a2a.server.tasks import TaskUpdater
+from a2a.types import TaskState
 from a2a.utils import new_agent_text_message, new_task
 
-class TitleExecutor(AgentExecutor):
+class TitleAgentExecutor(AgentExecutor):
+    def __init__(self, agent):
+        self.agent = agent
+
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
         task = context.current_task or new_task(context.message)
         await event_queue.enqueue_event(task)
-        await event_queue.enqueue_event(
-            new_agent_text_message("Blob access tiers, in one page", task.context_id, task.id),
+        updater = TaskUpdater(event_queue, task.id, task.context_id)
+        await updater.update_status(
+            TaskState.working,
+            message=new_agent_text_message("Title Agent is processing your request...", context_id=task.context_id),
+        )
+        responses = await self.agent.run_conversation(context.get_user_input())
+        final_message = responses[-1] if responses else "Task completed."
+        await updater.complete(
+            message=new_agent_text_message(final_message, context_id=task.context_id),
         )
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
-        raise RuntimeError("cancel is not supported")
+        raise Exception("cancel not supported")
 ```

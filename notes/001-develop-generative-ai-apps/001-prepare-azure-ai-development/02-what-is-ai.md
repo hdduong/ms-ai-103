@@ -12,3 +12,14 @@
 | Computer speech | Speech to text, text to speech, live conversation. Handles noise, interruptions, languages, and accents. Also transcription and read-aloud. |
 | Computer vision | Interpret images, video, and camera streams. Multimodal generative models can also create images and video. |
 | Information extraction | Combine language, document understanding, vision, and speech to pull fields out of forms, receipts, images, and recordings. |
+
+The module exercise deploys a model and tests it in the playground. The same call from the Foundry SDK lab is:
+
+```python
+response = openai_client.responses.create(
+    model="gpt-4.1",  # deployment name
+    instructions="You are an AI assistant that can provide information and advice about AI software development.",
+    input="Describe three key considerations for working with large language models.",
+)
+print(response.output_text)
+```

@@ -8,13 +8,22 @@
 
 ## Server
 
-```python
-from mcp.server.fastmcp import FastMCP
+The exercise hosts the tools with FastMCP. Lab: [Extend agents with MCP tools](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/03-mcp-integration.html).
 
-mcp = FastMCP("snowfall")
+```python
+from fastmcp import FastMCP
+
+mcp = FastMCP(name="Inventory")
 
 @mcp.tool()
-def recent_snowfall(location: str) -> str:
-    """Get recent snowfall totals for a city."""
-    return f"{location}: 2 inches"
+def get_inventory_levels() -> dict:
+    """Return the current stock count for each product."""
+    return {"moisturizer": 6, "shampoo": 8, "body_spray": 28}
+
+@mcp.tool()
+def get_weekly_sales() -> dict:
+    """Return units sold this week for each product."""
+    return {"moisturizer": 20, "shampoo": 4, "body_spray": 3}
+
+mcp.run(show_banner=False)
 ```

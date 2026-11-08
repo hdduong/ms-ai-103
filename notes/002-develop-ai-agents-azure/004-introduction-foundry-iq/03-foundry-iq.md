@@ -8,6 +8,8 @@
 - The service picks the search (keyword, semantic, query expansion), ranks the hits, and returns citations. You do not write that retrieval code.
 - The connection is MCP. The URL is `{search_endpoint}/knowledgebases/{name}/mcp`.
 
+![Knowledge (Foundry IQ). knowledgebase301 on the project's Azure AI Search connection, with one active knowledge source.](images/03-knowledge-bases.png)
+
 ## Knowledge base as an MCP tool
 
 ```python

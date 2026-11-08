@@ -15,3 +15,17 @@ Six sources. One knowledge base can mix them.
 
 - Remote SharePoint is slower and always current. Indexed SharePoint is faster and only as fresh as the last index.
 - Use web as a backup when the internal base has no answer. Do not use it when the source of the answer has to be yours.
+
+**Add sources** on a knowledge base picks the source type. This project's menu shows Work IQ, Fabric IQ (OneLake), Blob, Web, and Azure AI Search Index, plus **Browse more**.
+
+![knowledgebase301, Add sources: Work IQ, Fabric IQ, Azure Blob Storage, Web, Azure AI Search Index, Use existing sources, Browse more.](images/04-add-sources.png)
+
+The exercise uses Blob as the source. The knowledge source settings from that lab:
+
+```text
+Name: ks-contosoproducts
+Source: Azure Blob Storage
+Container: contosoproducts
+Content extraction mode: minimal
+Embedding model: text-embedding-3-small
+```

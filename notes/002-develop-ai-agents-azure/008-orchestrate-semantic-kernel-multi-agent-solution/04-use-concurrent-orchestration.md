@@ -7,25 +7,33 @@
 - Skip it when the next step needs the previous answer, the order must be stable, quota cannot cover parallel calls, agents would write the same data at once, or you cannot merge conflicts.
 - `ConcurrentBuilder(participants=[...]).build()`, then `run`, then `get_outputs()`. Each message has an author.
 
-## Two agents, one task
+## Three reviewers, one task
+
+`ConcurrentBuilder` is in `agent_framework.orchestrations`. The builder fans the prompt out to every participant and fans the replies back in. Pattern from the [Agent Framework orchestration samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/orchestrations).
 
 ```python
 import asyncio
-from agent_framework import Agent, ConcurrentBuilder
+import os
+from agent_framework import Agent, AgentResponse
 from agent_framework.foundry import FoundryChatClient
-from azure.identity import DefaultAzureCredential
+from agent_framework.orchestrations import ConcurrentBuilder
+from azure.identity import AzureCliCredential
 
 async def main():
     client = FoundryChatClient(
-        credential=DefaultAzureCredential(),
-        project_endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
-        model="gpt-4.1",  # deployment name
+        project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+        model=os.environ["FOUNDRY_MODEL"],  # deployment name
+        credential=AzureCliCredential(),
     )
-    researcher = Agent(client=client, name="Researcher", instructions="List the facts. Do not decide.")
-    writer = Agent(client=client, name="Writer", instructions="Give a one-paragraph recommendation.")
-    workflow = ConcurrentBuilder(participants=[researcher, writer]).build()
-    events = await workflow.run("Compare hot and cool blob tiers for a 90-day archive.")
-    print(events.get_outputs())
+    security = Agent(client=client, name="security", instructions="Review the design for security risks only.")
+    cost = Agent(client=client, name="cost", instructions="Review the design for cost only.")
+    reliability = Agent(client=client, name="reliability", instructions="Review the design for reliability only.")
+    workflow = ConcurrentBuilder(participants=[security, cost, reliability]).build()
+    result = await workflow.run("A web app calls one gpt-4.1 deployment in one region with an API key.")
+    for output in result.get_outputs():
+        if isinstance(output, AgentResponse):
+            for message in output.messages:
+                print(message.author_name, message.text)
 
 asyncio.run(main())
 ```

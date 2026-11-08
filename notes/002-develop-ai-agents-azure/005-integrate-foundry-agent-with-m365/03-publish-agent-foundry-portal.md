@@ -8,3 +8,15 @@
 - Test a downloaded zip: Teams, **Apps > Manage your apps > Upload an app > Upload a custom app**.
 - Organization scope: Microsoft 365 admin center, **Agents > All > Requested**, **Approve request and activate**. It then appears under **Built by your org**. App policies still decide who can open it.
 - After publish, copy the new agent identity and grant it RBAC on every Azure resource a tool uses. Then republish to push a change. Organization scope may need approval again.
+
+The identity to grant roles to is on the agent's **Details** tab, under **Identity & access**.
+
+![it-support-agent Details: Entra agent identity and Entra agent blueprint. IDs are masked.](images/03-agent-identity.png)
+
+The exercise checks the published agent in Teams with:
+
+```text
+Hello! What can you help me with?
+What are the laptop password requirements?
+What MFA methods are supported?
+```

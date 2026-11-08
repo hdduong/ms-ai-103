@@ -9,24 +9,28 @@
 
 ## One run
 
+Lab: [Develop an Azure AI chat agent with the Microsoft Agent Framework SDK](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/07-agent-framework.html). The credential in that file is `AzureCliCredential`.
+
 ```python
 import asyncio
+import os
 from agent_framework import Agent
 from agent_framework.foundry import FoundryChatClient
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential
 
 async def main():
-    agent = Agent(
-        client=FoundryChatClient(
-            credential=DefaultAzureCredential(),
-            project_endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
-            model="gpt-4.1",  # deployment name
-        ),
-        name="healthcare-assistant",
-        instructions="You help staff schedule appointments. Never share medical records.",
+    client = FoundryChatClient(
+        project_endpoint=os.getenv("PROJECT_ENDPOINT"),
+        model=os.getenv("MODEL_DEPLOYMENT_NAME"),  # deployment name
+        credential=AzureCliCredential(),
     )
-    response = await agent.run("What appointment types can I book?")
-    print(response.text)
+    async with Agent(
+        client=client,
+        name="ExpenseClaimAgent",
+        instructions="Create an expense claim email from the data you are given. Do not ask for more information.",
+    ) as agent:
+        response = await agent.run("Submit this claim: taxi 42, lunch 18.")
+        print(response)
 
 asyncio.run(main())
 ```

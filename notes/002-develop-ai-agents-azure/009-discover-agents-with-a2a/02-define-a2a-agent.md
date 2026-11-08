@@ -9,25 +9,29 @@
 
 ## Skill and card
 
+Lab: [Connect to remote agents with A2A](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/09-multi-remote-agents-with-a2a.html).
+
 ```python
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 
-skill = AgentSkill(
-    id="draft_title",
-    name="Draft a title",
-    description="Returns a title for a technical article.",
-    tags=["writing"],
-    examples=["Draft a title about blob access tiers."],
-)
-card = AgentCard(
-    name="title-agent",
-    description="Drafts article titles.",
-    url="http://localhost:9000/",
+skills = [
+    AgentSkill(
+        id="generate_blog_title",
+        name="Generate Blog Title",
+        description="Generates a blog title based on a topic",
+        tags=["title"],
+        examples=["Can you give me a title for this article?"],
+    ),
+]
+agent_card = AgentCard(
+    name="Microsoft Foundry Title Agent",
+    description="An intelligent title generator agent powered by Foundry.",
+    url=f"http://{host}:{port}/",
     version="1.0.0",
     default_input_modes=["text"],
     default_output_modes=["text"],
-    capabilities=AgentCapabilities(streaming=True),
-    skills=[skill],
+    capabilities=AgentCapabilities(),
+    skills=skills,
 )
-print(card.name, skill.id)
+print(agent_card.name, skills[0].id)
 ```

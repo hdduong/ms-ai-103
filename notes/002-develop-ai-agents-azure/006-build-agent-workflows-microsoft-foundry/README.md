@@ -2,6 +2,8 @@
 
 [build-agent-workflows-microsoft-foundry](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/)
 
+The Foundry portal says workflows retire on December 1, 2026. New workflows should use Microsoft Agent Framework (modules 007 and 008). See the [migration guide](https://learn.microsoft.com/azure/foundry/agents/concepts/workflow#migration-guide).
+
 | Sequence | Unit | Notes |
 | --- | --- | --- |
 | 01 | Introduction | |

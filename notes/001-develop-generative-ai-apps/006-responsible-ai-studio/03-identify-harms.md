@@ -6,3 +6,7 @@
 2. **Prioritize** by likelihood and impact, including misuse, not only the intended use. A rare high-impact harm and a common lower-impact harm can both rank high. Legal and policy input belongs in that ranking.
 3. **Test.** Red team: try to make the harmful output happen, and record what worked. New harms found here go on the list. In the portal that scan is **Build > Evaluations > Red team**.
 4. **Document** the verified harms and share them. Keep the list current.
+
+The test step in the portal is a red teaming run. It attacks a model or an agent and reports which safety and security risks got through.
+
+![Evaluations, Red team tab. Create a red teaming run against a model or an agent.](images/03-red-team.png)

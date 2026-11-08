@@ -8,3 +8,15 @@
 - Users cannot find it: shared scope needs the link, organization scope needs admin approval, or the tenant blocks custom apps.
 - Slow replies: long instructions, a tool over a large index, or the network. Watch Foundry metrics (volume, latency, errors, tool calls) and Application Insights traces.
 - Fix it in Foundry, retest, republish. Organization scope may need approval again.
+
+The Foundry metrics are on the agent's **Monitor** tab.
+
+![it-support-agent Monitor: estimated cost, token usage, evaluations, scheduled red teaming, agent runs, and Gen AI errors.](images/06-agent-monitor.png)
+
+The Teams exercise uses these checks after install:
+
+```text
+Hello! What can you help me with?
+What are the laptop password requirements?
+What MFA methods are supported?
+```
