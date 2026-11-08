@@ -1,37 +1,24 @@
 # ms-ai-103
 
-Study notes for the Microsoft Learn path [Develop generative AI apps on Microsoft Foundry](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/) (titled *Develop generative AI apps in Azure* on the path page).
+Study material for the Azure AI Apps and Agents Developer exam (AI-103).
 
-The path is intermediate. It is aimed at data scientists and AI engineers who already know basic AI concepts, Azure services, and a programming language. It covers building generative AI apps on [Microsoft Foundry](https://ai.azure.com) that use language models to talk with users.
+## notes
 
-## Modules
+Microsoft Learn paths, summarized by module and unit. Start at [notes/README.md](notes/README.md).
 
-1. [Plan and prepare to develop AI solutions on Azure](https://learn.microsoft.com/en-us/training/modules/prepare-azure-ai-development/)
-2. Select, deploy, and evaluate Microsoft Foundry models
-3. [Develop a generative AI chat app with Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/)
-4. Develop generative AI apps that use tools
-5. Optimize generative AI model performance with Microsoft Foundry
-6. Implement a responsible generative AI solution in Microsoft Foundry
+- [Develop generative AI apps in Azure](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/)
+- [Develop AI agents on Azure](https://learn.microsoft.com/en-us/training/paths/develop-ai-agents-azure/)
 
-## Sample unit: Choose an endpoint and SDK
+## practice-test
 
-Module 3, unit: [Choose an endpoint and SDK](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/03-microsoft-foundry-sdk?pivots=text).
+Third-party AI-103 practice material. These are not Microsoft exams and are not affiliated with Microsoft.
 
-Before writing a chat app, pick an endpoint, a client SDK, and an authentication method. Each Foundry project exposes both a project endpoint and an Azure OpenAI endpoint.
-
-| Choice | Endpoint shape | Client | Use it when |
-| --- | --- | --- | --- |
-| Foundry SDK | `https://{resource-name}.services.ai.azure.com/api/projects/{project-name}` | `AIProjectClient` from `azure-ai-projects`, then `get_openai_client()` | The app needs agents, evaluations, tracing, project connections, or models from the Foundry catalog |
-| OpenAI SDK | `https://{resource-name}.openai.azure.com/openai/v1` | `OpenAI` (or `AzureOpenAI` when a specific Azure OpenAI API version is required) | Existing OpenAI code should keep working, or the workload is model inference only |
-
-Production apps should authenticate with Microsoft Entra ID (`DefaultAzureCredential`, after `az login` for local runs). API keys and `OPENAI_BASE_URL` / `OPENAI_API_KEY` also work; keep keys in Azure Key Vault and out of source.
-
-For chat, prefer the Responses API on new work. Chat Completions remains the compatible option across models and platforms.
-
-Python packages for the Foundry path:
-
-```bash
-pip install azure-ai-projects azure-identity openai
-```
-
-The OpenAI-only path needs `openai` and `azure-identity` when using Entra ID.
+| Folder / File | Source | What it is |
+| --- | --- | --- |
+| [sefstratiou-ai](practice-test/sefstratiou-ai) | [sefstratiou-ai/ai-103-practice-exam](https://github.com/sefstratiou-ai/ai-103-practice-exam) | Browser simulator. 226 original questions, 51 per attempt. From that folder: `npm ci`, then `npm run dev`, or double-click `Start Exam.cmd` on Windows. |
+| [tpriyadata](practice-test/tpriyadata) | [tpriyadata/microsoft-ai-103-study-guide](https://github.com/tpriyadata/microsoft-ai-103-study-guide) | Study guide plus three markdown quizzes in `mock-tests`. |
+| [1056098576-AI-103-All-Exam-Questions-No-Answers.pdf](practice-test/1056098576-AI-103-All-Exam-Questions-No-Answers.pdf) | [With answers](practice-test/1056098576-AI-103-All-Exam-Questions.pdf) | 15 practice questions (questions and options only; answer key in the linked PDF). |
+| [1056099530-Azure-AI-Foundry-Exam-Compilation-No-Answers.pdf](practice-test/1056099530-Azure-AI-Foundry-Exam-Compilation-No-Answers.pdf) | [With answers](practice-test/1056099530-Azure-AI-Foundry-Exam-Compilation.pdf) | 25 Foundry exam scenarios (questions and options only; answer key in the linked PDF). |
+| [MeasureUp AI-103](https://www.measureup.com/microsoft-microsoft-ai-103-practice-test.html) | Paid | **Reminder: buy.** 123 questions, practice and timed modes, explanations tied to Microsoft docs. |
+| [Tutorials Dojo AI-103](https://portal.tutorialsdojo.com/courses/ai-103-azure-ai-app-and-agent-developer-associate-practice-exams/) | Paid, about $50 | **Reminder: buy.** Timed, review, and section modes. [Free 20-question sampler](https://portal.tutorialsdojo.com/courses/free-ai-103-azure-ai-app-and-agent-developer-associate-practice-exams-sampler/). |
+| [Cloud and AI Hub](https://shop.cloudandaihub.com/) | Paid PDF | **Reminder: buy.** AI-103 pack is 203 questions with explanations. Instant download after payment. |
