@@ -39,5 +39,11 @@ async def main():
             for message in output.messages:
                 print(message.author_name, message.text)
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
+
+
+Save the program as `concurrent_review.py` and run it with the shared environment. The same design text reaches `security`, `cost`, and `reliability`; each instruction set constrains one review. The builder waits for the branches and exposes their results, while the author labels keep those results distinguishable.
+
+Check that all three perspectives appear. Their completion order and wording may vary. No participant sees another participant's response in this pattern, so the program does not resolve disagreements between reviewers; a later aggregation step would do that.

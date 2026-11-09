@@ -14,3 +14,5 @@ The Foundry portal says workflows retire on December 1, 2026: the designer and i
 | 06 | [Apply Power Fx in Workflows](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/6-apply-power-fx?pivots=text) | [06-apply-power-fx.md](06-apply-power-fx.md) |
 | 07 | [Maintain Workflows in Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/7-maintain-workflows?pivots=text) | [07-maintain-workflows.md](07-maintain-workflows.md) |
 | 08 | [Use workflows in code](https://learn.microsoft.com/en-us/training/modules/build-agent-workflows-microsoft-foundry/8-use-workflows-in-code?pivots=text) | [08-use-workflows-in-code.md](08-use-workflows-in-code.md) |
+
+The ContosoPay example develops through the lessons: choose the graph in 03, create ticket variables in 04, define both agents in 05, add routing expressions in 06, and invoke the saved workflow in 08. Each code or configuration block sits beside the concept it demonstrates.

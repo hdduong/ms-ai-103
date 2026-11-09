@@ -2,14 +2,14 @@
 
 [Use Magentic orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/8-use-magentic-orchestration?pivots=text)
 
-- A Magentic manager plans, picks the next specialist, and keeps a task ledger of goals and steps. The plan is part of the result, so a person can read it.
+- A Magentic manager plans, picks the next specialist, and maintains task/progress ledgers. The final output is its synthesized answer; inspect orchestration events when you need the plan or progress details.
 - Use it when the path is not known, several specialists plus tools must shape the answer, and you want the plan written down.
 - Skip it when the path is fixed, you do not need a ledger, a lighter pattern works, or you need speed. Planning is slower, and a stall loop is a real failure.
 - `MagenticBuilder` plus a manager agent. `max_round_count`, `max_stall_count`, and `max_reset_count` bound the loop. The Learn page says `run_stream`. In the current SDK that is `run(task, stream=True)`, or `run(task)` and then `get_outputs()`.
 
 ## Plan, then delegate
 
-Pattern from the [Agent Framework orchestration samples](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/orchestrations). The coder gets the hosted code interpreter, so the manager has a specialist for math. The researcher has no search tool, so the prompt supplies the rates.
+Pattern from the [Agent Framework Magentic documentation](https://learn.microsoft.com/en-us/agent-framework/workflows/orchestrations/magentic). The coder gets the hosted code interpreter, so the manager has a specialist for math. The researcher has no search tool, so the prompt supplies the rates.
 
 Packages and `.env` as in the [lab](05-use-sequential-orchestration.md#lab-feedback-pipeline). The lab itself only builds the sequential pipeline.
 
@@ -64,5 +64,11 @@ async def main():
     for output in result.get_outputs():
         print(output.text)
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
+
+
+Save as `estimate_cost.py`. The researcher extracts the supplied assumptions, the coder can execute arithmetic with the hosted interpreter, and the manager decides which participant should act next. The three limits bound coordination rounds, repeated lack of progress, and replanning attempts.
+
+The supplied hypothetical figures give 300 million input tokens and 150 million output tokens for 30 days: **600 + 1,200 = 1,800 dollars**. Use that arithmetic to check the final answer. The program does not retrieve live prices. Printing `result.get_outputs()` shows the synthesized response; a complete plan/progress log requires the [Magentic event stream](https://learn.microsoft.com/en-us/agent-framework/workflows/orchestrations/magentic#run-the-workflow-with-event-streaming).

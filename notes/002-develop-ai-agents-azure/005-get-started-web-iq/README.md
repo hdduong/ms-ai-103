@@ -10,3 +10,5 @@
 | 04 | [Use Web IQ in Foundry](https://learn.microsoft.com/en-us/training/modules/get-started-web-iq/4-use-web-iq-foundry) | [04-use-web-iq-foundry.md](04-use-web-iq-foundry.md) |
 
 Web IQ is public-web evidence. Foundry IQ (module 004) is enterprise knowledge. Work IQ (module 006) is Microsoft 365 workplace data.
+
+The music-agent example follows the same sequence as the concepts: choose a retrieval method in unit 02, test its resource and credentials in unit 03, then attach the tool and inspect its results in unit 04. The official exercise is portal-based; its configuration and prompts are explained in those lessons.

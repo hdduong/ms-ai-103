@@ -25,4 +25,8 @@ Lab: [Explore and compare models](https://microsoftlearning.github.io/mslearn-ai
 | Criteria | Remove the Agent and Safety criteria |
 | Name | `travel-assistant-eval` |
 
-Read each row's question, response, score, and evaluator reason together. **Analyze results** groups the failures. The lab removes the safety evaluators, so this run gives no safety score, and a correct refusal can still get a low quality score.
+The generation model creates the questions; the target deployment answers them; the selected evaluators judge those answers. These are separate roles even when a configuration uses the same model name for more than one role.
+
+Submit the run and read each row's question, response, score, and evaluator reason together. **Analyze results** groups the failures. Pick a failed case, explain what the response missed, change one prompt or model setting, and rerun the same dataset to compare.
+
+The lab removes the safety evaluators, so including safety questions in the generated data does not produce a safety score. A correct refusal can still receive a low score from a general quality evaluator. Use [appropriate safety measurements](../006-responsible-ai-studio/04-measure-harms.md) when that is what you need to assess.

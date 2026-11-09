@@ -6,7 +6,7 @@ Study material for the Azure AI Apps and Agents Developer exam (AI-103).
 
 Microsoft Learn paths, summarized by module and unit. Start at [notes/README.md](notes/README.md).
 
-16 modules across the two paths, including Web IQ. Each lesson has the lab code or a screenshot.
+16 modules across the two paths, including Web IQ. Exercise code and portal steps are explained inside the lessons that teach the corresponding concepts. The path indexes show where each worked example begins and how it continues across lessons.
 
 - [Develop generative AI apps in Azure](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/)
 - [Develop AI agents on Azure](https://learn.microsoft.com/en-us/training/paths/develop-ai-agents-azure/)

@@ -10,14 +10,20 @@
 
 ## Lab: create the resource
 
-Lab: [Integrate web search into an agent using Web IQ](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/04b-web-iq.html). Portal only.
+Use the resource setup from [Integrate web search into an agent using Web IQ](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/04b-web-iq.html) to prepare the music agent introduced in [unit 02](02-explore-web-iq.md#choose-a-method-for-the-music-agent-example). This part runs in the portals; it has no application code to paste.
 
-```text
-Azure portal   Create > Microsoft Web IQ, region Global, accept the terms
-Web IQ portal  Get Started > sign in > pick the subscription and the new resource > Finish
-               The new AppID shows in the top-left selector
-               Playground: run a test query
-               Profile management: copy the default API key for the Foundry connection
-```
+1. In the **Azure portal**, create a **Microsoft Web IQ** resource in the **Global** region with the paid subscription and accept its terms.
+2. Open **Go to Web IQ portal**, sign in, and select that same subscription and resource. Confirm the intended AppID in the profile selector.
+3. In **Playground**, choose **Web**, enter an artist query, and run it. Inspect both the JSON and formatted result. Then switch to **Images** to see how the response changes.
+4. Open **Profile management** and copy the default API key for the Foundry connection in [unit 04](04-use-web-iq-foundry.md#lab-band-agent).
 
-The agent side is in [04](04-use-web-iq-foundry.md#lab-band-agent).
+These objects serve different purposes:
+
+| Object created or selected | Why the agent needs it |
+| --- | --- |
+| Azure Web IQ resource | Associates service usage with the subscription and billing |
+| AppID/profile | Selects the enabled APIs, credentials, and limits |
+| API key | Authenticates retrieval through that profile |
+| Foundry connection, created next | Stores the credential so the agent can call Web IQ |
+
+A successful playground result verifies the retrieval service and its credentials. It does not yet verify an agent integration: the agent still needs the connection attached as a tool, instructions, and a traced call.

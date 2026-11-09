@@ -8,3 +8,5 @@
 | 02 | [Why use custom tools](https://learn.microsoft.com/en-us/training/modules/build-agent-with-custom-tools/2-why-use-custom-tools?pivots=text) | [02-why-use-custom-tools.md](02-why-use-custom-tools.md) |
 | 03 | [Options for implementing custom tools](https://learn.microsoft.com/en-us/training/modules/build-agent-with-custom-tools/3-custom-tool-options?pivots=text) | [03-custom-tool-options.md](03-custom-tool-options.md) |
 | 04 | [How to integrate custom tools](https://learn.microsoft.com/en-us/training/modules/build-agent-with-custom-tools/4-how-use-custom-tools?pivots=text) | [04-how-use-custom-tools.md](04-how-use-custom-tools.md) |
+
+Follow one astronomy example across the lessons: [implement the data and action functions](02-why-use-custom-tools.md), [describe their schemas](03-custom-tool-options.md#describe-the-three-functions-to-the-model), then [dispatch calls and run the agent](04-how-use-custom-tools.md#lab-astronomy-agent). Save the labeled blocks as `functions.py`, `tools.py`, and `agent.py` in one directory.

@@ -2,12 +2,10 @@
 
 [Use group chat orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/6-use-group-chat-orchestration?pivots=text)
 
-- Agents share one thread. A chat manager chooses who speaks and when a person should join. Agents talk. They do not change live systems.
+- Agents share a conversation. A manager selects the next speaker and decides when to finish or request user input. Configured tools can still perform actions; group chat itself does not make agents read-only.
 - Use it for brainstorming, a debate, maker-checker (one writes, one reviews, repeat), or a review you can audit because it is one transcript.
-- Skip it for a straight pipeline, when you need a fast answer, or with more than about three agents. The manager has to know when to stop.
-- `GroupChatBuilder`. A custom `GroupChatManager` can change the rules.
-- Each round, in order: `should_request_user_input`, `should_terminate`, then either `filter_results` or `select_next_agent`.
-- Those manager methods are the Learn page's API. The current SDK takes one of `orchestrator_agent`, `selection_func`, or a `BaseGroupChatOrchestrator`, plus `termination_condition` and `max_rounds`.
+- Prefer a simpler pipeline when dependencies are fixed or latency matters. More participants increase coordination cost; the manager needs an explicit stopping rule.
+- The Learn page describes `GroupChatManager` callbacks (`should_request_user_input`, `should_terminate`, `filter_results`, `select_next_agent`). The pinned SDK uses `orchestrator_agent`, `selection_func`, or a `BaseGroupChatOrchestrator`, plus `termination_condition` and `max_rounds`. Use the API matching your installed packages.
 
 The Learn page copies the concurrent steps and says the agents run in parallel. They do not. The manager picks one speaker per turn.
 
@@ -53,5 +51,11 @@ async def main():
             for message in transcript:
                 print(message.author_name or message.role, message.text)
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
+
+
+Save as `group_review.py`. `manager` controls turn selection; it is separate from the `participants` that draft and review. Each participant sees the shared transcript, so the reviewer can assess the writer's actual response and the writer can revise it. The manager may finish early; the explicit limits bound continued discussion.
+
+Check the printed authors and content: Writer should draft a reply, and Reviewer should comment on that draft. This program generates and reviews text; it contains no tool that sends a support response. The transcript is useful for inspecting the collaboration, while the [sequential exercise](05-use-sequential-orchestration.md#lab-feedback-pipeline) offers a fixed-order alternative.

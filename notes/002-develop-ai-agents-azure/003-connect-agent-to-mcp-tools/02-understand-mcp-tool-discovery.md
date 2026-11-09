@@ -2,8 +2,8 @@
 
 [Understand MCP tool discovery](https://learn.microsoft.com/en-us/training/modules/connect-agent-to-mcp-tools/2-understand-mcp-tool-discovery?pivots=text)
 
-- MCP is a live catalog. The agent asks the server which tools exist. You do not hard-code each API, and you do not redeploy the agent when a tool changes.
-- Exam benefits: **dynamic tool discovery**, **interoperability across LLMs** (same tools for any model), **standardized security** (one auth pattern instead of a key per API).
+- MCP lets a client discover the tool names, descriptions, and input schemas exposed by a server. The application can build model tools from that catalog instead of hard-coding an API wrapper for every operation.
+- Learn groups the benefits as **dynamic tool discovery**, **interoperability across LLMs**, and **standardized security**. A host still needs to support the tool schemas, and each server still needs appropriate authentication and permissions. The local stdio example below relies on the local process boundary; it does not implement remote OAuth.
 - The server hosts tools with `@mcp.tool`. The client calls `session.list_tools()`, wraps each one, and the agent calls them.
 
 ## Lab server: `server.py`
@@ -36,3 +36,9 @@ def get_weekly_sales() -> dict:
 if __name__ == "__main__":
     mcp.run(transport="stdio", show_banner=False)
 ```
+
+### What discovery exposes
+
+`@mcp.tool()` registers each function. FastMCP derives the tool name and input schema from the signature and its description from the docstring. Neither function takes arguments, so both have an empty input object. Their returned dictionaries are data for the model; the server does not decide which products need restocking.
+
+The [client lesson](03-mcp-client-server-setup.md#lab-client-clientpy) supplies that business rule in agent instructions and discovers these two tools with `session.list_tools()`. Discovery happens when the client starts. If the server adds or changes a tool, this particular client must reconnect and refresh the agent's tool definitions; an already registered schema does not update by itself.

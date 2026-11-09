@@ -12,3 +12,5 @@
 | 06 | [Use group chat orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/6-use-group-chat-orchestration?pivots=text) | [06-use-group-chat-orchestration.md](06-use-group-chat-orchestration.md) |
 | 07 | [Use handoff orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/7-use-handoff-orchestration?pivots=text) | [07-use-handoff-orchestration.md](07-use-handoff-orchestration.md) |
 | 08 | [Use Magentic orchestration](https://learn.microsoft.com/en-us/training/modules/orchestrate-semantic-kernel-multi-agent-solution/8-use-magentic-orchestration?pivots=text) | [08-use-magentic-orchestration.md](08-use-magentic-orchestration.md) |
+
+The customer-feedback exercise is explained in the sequential lesson (05). Its environment is reused by the other pattern examples, which are explicitly identified as adaptations from Agent Framework samples. Unit 03 explains how to read results and SDK event differences.

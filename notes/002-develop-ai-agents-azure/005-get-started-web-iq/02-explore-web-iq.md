@@ -18,11 +18,10 @@
 | Browse | You already have the URL | Read the tour page that search found |
 | Auto | You want evidence across types in one call | Announcements across web and news |
 
-Tuning knobs, as Web IQ request settings:
+## Choose a method for the music-agent example
 
-```text
-query and site restriction   focus on the sources that matter
-language and region          match results to the user's market
-result count, content length balance coverage against the context budget
-content format               query-relevant passages for grounding, or full documents
-```
+The [official exercise](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/04b-web-iq.html) builds `band-agent`. A question about a band's history may be answerable from model knowledge. Asking about its next concert needs current evidence, so Web Search can find an official tour page and Browse can inspect that page. A request for pictures calls for Images; a text-only web result is not the same output.
+
+The playground lets you observe this distinction before involving the model. Run the same artist query with **Web** and **Images** selected and compare the returned links and result types. Use query/site restrictions to focus on relevant sources, language/region to match the audience, and result count/content length to control how much evidence reaches the model. Content format controls whether to return focused passages or fuller documents.
+
+Continue with [resource and credential setup](03-configure-web-iq.md#lab-create-the-resource), then [attach the tool and inspect the agent's choices](04-use-web-iq-foundry.md#lab-band-agent). The exercise is a portal workflow; its instructions and queries are embedded in those lessons.

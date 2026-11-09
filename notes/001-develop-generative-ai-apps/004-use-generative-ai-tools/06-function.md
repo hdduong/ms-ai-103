@@ -10,7 +10,6 @@
 The unit's time function as a loop. `openai_client` is from [Choose an endpoint and SDK](../003-foundry-sdk/03-choose-an-endpoint-and-sdk.md).
 
 ```python
-import json
 from datetime import datetime, timezone
 
 def get_time():
@@ -30,7 +29,8 @@ tools = [{
 }]
 messages = [{"role": "user", "content": "What is the current UTC time?"}]
 
-for _ in range(5):
+tool_rounds = 0
+while True:
     response = openai_client.responses.create(
         model="gpt-4.1",  # deployment name
         instructions="Use get_time for the current time and answer using its output.",
@@ -42,6 +42,9 @@ for _ in range(5):
     if not calls:
         print(response.output_text)
         break
+    if tool_rounds >= 5:
+        raise RuntimeError("The model requested more than five rounds of tool calls.")
+    tool_rounds += 1
     for call in calls:
         if call.name != "get_time":
             raise ValueError("Unknown function: " + call.name)
@@ -52,4 +55,6 @@ for _ in range(5):
         })
 ```
 
-The schema tells the model what it can ask for. Your code does the work. `range(5)` stops a runaway loop.
+The schema describes the request the model can make; `get_time()` gets the actual time from the application clock. `messages.extend(response.output)` preserves the function-call item, and the matching `call_id` connects its result to the request. The next `responses.create` call lets the model turn that result into a user-facing answer.
+
+The counter allows five rounds of tool execution and still makes the final request that consumes the fifth round's results. If the model asks for a sixth round, the program reports the limit instead of silently stopping without an answer. Unlike the hosted web/file tools in the [travel application](05-file-search.md#lab-brochures-plus-web-search), a custom function runs in your application process.

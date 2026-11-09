@@ -11,13 +11,14 @@
 
 ![Build > Agents. Both agents are Prompt type. Workflows has its own tab.](images/02-agents-list.png)
 
-The module exercise calls the saved agent by name. The model stays on the agent.
+## Follow one agent through the module
 
-```python
-response = openai_client.responses.create(
-    conversation=conversation.id,
-    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    input="",
-)
-print(response.output_text)
-```
+The [portal and VS Code exercise](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html) uses `it-support-agent` throughout these lessons. Its model interprets a request, while its tools supply evidence or perform analysis:
+
+| Request | Capability | What to check |
+| --- | --- | --- |
+| What is the password reset policy? | File Search over `IT_Policy.txt` | The answer agrees with the uploaded policy |
+| When did CPU usage exceed 80%? | Code Interpreter over `system_performance.csv` | The numbers match the CSV |
+| Create a memory-usage chart. | Code Interpreter generates a file | The client downloads the chart artifact |
+
+[Unit 04](04-build-agent-azure-portal.md#lab-it-support-agent) configures this behavior in the portal. [Unit 08](08-test-deploy-integrate.md#lab-client-chat-with-the-portal-agent) calls the saved agent by name; the client does not need to repeat its model, instructions, or hosted-tool definitions on every turn.

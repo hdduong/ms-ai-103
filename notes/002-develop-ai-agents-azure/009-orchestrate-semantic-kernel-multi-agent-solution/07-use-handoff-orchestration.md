@@ -5,11 +5,11 @@
 - One agent works, then passes the conversation to a specialist. The next agent is not known at the start.
 - Use it when the domain shows up in the text (billing versus technical) and you can name the handoff rule.
 - Skip it when the order is fixed, a simple rule is enough, a wrong route annoys the user, work must run in parallel, or agents can bounce forever.
-- Implementation is a classifier with structured JSON, then a switch-case edge. Always include a default case. The SDK also has `HandoffBuilder`, where an agent asks for the transfer itself through generated handoff tools.
+- The Learn unit illustrates routing with a structured classifier and switch-case edge. Agent-driven handoff uses `HandoffBuilder`, which gives participants tools to transfer control. Choose the mechanism according to who should make the routing decision.
 
 ## Classifier, then a switch-case edge
 
-This is the unit's design in code. The classifier returns typed JSON, a small executor turns it into a route, and `add_switch_case_edge_group` checks the cases in order. `Default` catches anything that does not match. Pattern from the [switch-case control-flow sample](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/control-flow).
+This adapted example implements the unit's deterministic routing design. The destination executors return routing labels; they are not complete specialist agents. The classifier returns typed JSON, a small executor turns it into a route, and `add_switch_case_edge_group` checks the cases in order. `Default` catches anything that does not match. Pattern from the [switch-case control-flow sample](https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows/control-flow).
 
 Packages and `.env` as in the [lab](05-use-sequential-orchestration.md#lab-feedback-pipeline). The lab itself only builds the sequential pipeline.
 
@@ -105,7 +105,13 @@ async def main():
     result = await workflow.run("I was charged twice for the same invoice.")
     print(result.get_outputs())
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 The SDK also has `HandoffBuilder(participants=[...]).with_start_agent(triage).build()`. It gives each agent a handoff tool, so the agents pick the next specialist themselves instead of a fixed switch-case.
+
+
+Save as `route_ticket.py`. `start` stores the original ticket before the classifier turns its input into structured output. `to_route` combines the predicted category with that preserved text. The switch evaluates Billing and Technical cases, then sends `unknown` to the default executor. A malformed JSON response still needs error handling; the default edge handles an unmatched valid route, not a parsing exception.
+
+For the duplicate-charge prompt, check that the output begins with `Billing team:` and includes the original ticket. No ticket is assigned to a real team: `ctx.yield_output(...)` emits text. Replacing those executors with specialist agents or business operations is a further application step.

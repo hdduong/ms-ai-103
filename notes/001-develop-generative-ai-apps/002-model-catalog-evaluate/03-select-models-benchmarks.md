@@ -22,4 +22,6 @@ I have a fox, a chicken, and a bag of grain that I need to take over a river in 
 Explain your reasoning.
 ```
 
-Compare accuracy, reasoning, and style. Keep the prompt and instructions the same so the model is the only thing that changes.
+Check the proposed crossings against the puzzle's constraints and compare the explanations and style. Keep the prompt and instructions the same so the deployment is the variable being compared. A fluent explanation can still describe an invalid crossing.
+
+The result is a small manual test, not a benchmark score for the whole application. Use the catalog scores to shortlist models, then continue with [the travel-assistant evaluation](05-evaluate-performance.md#lab-evaluate-with-synthetic-data) to inspect multiple cases systematically.

@@ -10,3 +10,5 @@
 | 04 | [Advanced — Use Microsoft 365 Agents Toolkit](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/4-agents-toolkit-advanced?pivots=text) | [04-agents-toolkit-advanced.md](04-agents-toolkit-advanced.md) |
 | 05 | [Access Microsoft 365 data with Work IQ](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/5-access-m365-data-workiq?pivots=text) | [05-access-m365-data-workiq.md](05-access-m365-data-workiq.md) |
 | 06 | [Test and iterate your integrated agent](https://learn.microsoft.com/en-us/training/modules/integrate-foundry-agent-with-m365/6-test-iterate-agent?pivots=text) | [06-test-iterate-agent.md](06-test-iterate-agent.md) |
+
+Follow `enterprise-knowledge-agent` from the publishing concepts in unit 02, through its grounded configuration and channel setup in unit 03, to the evidence checks in unit 06. Unit 04 explains the optional proxy approach. Unit 05 embeds the separate Work IQ scenario where the agent retrieves the signed-in user's workplace context.

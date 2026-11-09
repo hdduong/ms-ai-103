@@ -2,14 +2,15 @@
 
 [Host an A2A server](https://learn.microsoft.com/en-us/training/modules/discover-agents-with-a2a/4-host-a2a-agent-server?pivots=text)
 
-- Three parts: the Agent Card, a request handler, and the HTTP app.
-- The card is served at `/.well-known/agent-card.json`. An extended card can require auth.
-- The handler sends `execute` and `cancel` to the executor. A Task Store tracks tasks, streams, and resubscribe. Even a greeting agent needs one. `InMemoryTaskStore` is lost on restart.
-- Python stack in the unit: Starlette plus Uvicorn.
+Hosting connects the pieces built in earlier lessons. The Agent Card advertises capabilities, a request handler dispatches protocol operations to the executor, and an HTTP application exposes the routes.
+
+- The card is available at `/.well-known/agent-card.json`.
+- The handler uses a task store to track task state. `InMemoryTaskStore` is suitable for this local example and loses its records when the process restarts.
+- An extended card can require authentication. The local exercise below has no authentication middleware and binds to localhost.
 
 ## Lab: `title_agent/server.py`
 
-From the [A2A lab](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/09-multi-remote-agents-with-a2a.html). `agent_card`, `host`, and `port` are the ones from [02](02-define-a2a-agent.md#skill-and-card), defined at the top of this file. The extra `/health` route matters: `run_all.py` waits for it before it starts the client.
+Append this block **after the skill/card block from [unit 02](02-define-a2a-agent.md#skill-and-card)** in `title_agent/server.py`; together they replace the entire starter file. It uses the executor completed in [unit 03](03-implement-agent-executor.md#a2a-task-events).
 
 ```python
 import uvicorn
@@ -41,4 +42,21 @@ if __name__ == "__main__":
     uvicorn.run(app, host=host, port=port)
 ```
 
-Without the health route, `uvicorn.run(a2a_app.build(), host=host, port=port)` is enough. After it starts, `http://localhost:10007/.well-known/agent-card.json` returns the card. The outline agent is the same shape on port 10008.
+`DefaultRequestHandler` connects incoming A2A operations to `FoundryAgentExecutor`. `A2AStarletteApplication` creates the protocol and card routes. The extra `/health` route is part of the [exercise launcher](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/09-build-remote-agents-with-a2a/python/run_all.py): it waits for each server to report readiness before continuing. Omitting it can make an otherwise working A2A server fail the launcher's readiness check.
+
+From the exercise's `python` folder, test only the title server with:
+
+```bash
+python -m uvicorn title_agent.server:app --host localhost --port 10007
+```
+
+In another terminal:
+
+```bash
+curl http://localhost:10007/health
+curl http://localhost:10007/.well-known/agent-card.json
+```
+
+Expect the health text and a card containing `generate_blog_title` and the localhost URL. These requests do not call a model: the backend is created lazily when the executor receives work. Stop this test server before [unit 05's launcher](05-connect-to-a2a-agent.md#run-all-three) starts the same port.
+
+The provided outline agent has the same server/executor/backend separation on port 10008. Reading its card shows how two different capabilities can expose the same protocol shape.
