@@ -20,3 +20,5 @@ response = openai_client.responses.create(
 )
 print(response.output_text)
 ```
+
+In the lab: ask a travel question in the playground, attach **Web search**, and ask again to compare. The lab app pairs web search with file search, see [05](05-file-search.md#lab-brochures-plus-web-search).

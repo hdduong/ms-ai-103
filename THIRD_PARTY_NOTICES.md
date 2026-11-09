@@ -1,6 +1,6 @@
 # Third-party notices
 
-The exercise code and selected configuration examples in `notes/` are adapted from the Microsoft Learning repositories below. The lesson pages identify their source files and any adaptations. Their licenses apply to the copied material; this notice does not change the licensing of unrelated repository content.
+The lab code and selected configuration examples in `notes/` are adapted from the Microsoft Learning repositories below. Each lesson's **Lab:** section links the exercise it comes from. Their licenses apply to the copied material; this notice does not change the licensing of unrelated repository content.
 
 ## MicrosoftLearning/mslearn-ai-studio
 

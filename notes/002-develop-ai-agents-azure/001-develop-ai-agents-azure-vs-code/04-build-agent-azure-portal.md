@@ -11,19 +11,30 @@
 
 ![it-support-agent in the portal: model, instructions, tools, the chat playground, YAML, and Publish.](images/04-agent-playground.png)
 
-The exercise loads the portal agent and sends one turn.
+## Lab: it-support-agent
 
-```python
-agent = project_client.agents.get(agent_name="it-support-agent")
-conversation = openai_client.conversations.create(items=[])
-openai_client.conversations.items.create(
-    conversation_id=conversation.id,
-    items=[{"type": "message", "role": "user", "content": "My laptop will not join the VPN."}],
-)
-response = openai_client.responses.create(
-    conversation=conversation.id,
-    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    input="",
-)
-print(response.output_text)
+Lab: [Build AI agents with portal and VS Code](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html). Create `it-support-agent` with these instructions:
+
+```text
+You are an IT Support Agent for Contoso Corporation.
+Help employees with technical issues and IT policy questions.
+Use the uploaded policy documentation for policy answers.
+Be professional and helpful. If you don't know, admit it and suggest IT support.
+Collect the required details before proposing a support ticket.
 ```
+
+| Tool | File from the lab | Used for |
+| --- | --- | --- |
+| File search | `IT_Policy.txt` | Policy answers |
+| Code interpreter (+ Files) | `system_performance.csv` | Metrics and charts |
+
+Wait for indexing, then test both tools in the playground:
+
+```text
+What's the policy for password resets?
+Analyze the system performance data and identify when CPU usage exceeded 80%.
+Create a line chart showing memory usage over time.
+What are the average, minimum, and maximum disk usage values?
+```
+
+The Python client for the same agent is in [08](08-test-deploy-integrate.md#lab-client-chat-with-the-portal-agent).

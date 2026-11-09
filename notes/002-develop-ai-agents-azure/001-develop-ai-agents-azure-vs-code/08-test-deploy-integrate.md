@@ -47,3 +47,69 @@ response = requests.post(
 response.raise_for_status()
 print(response.status_code, response.json())
 ```
+
+## Lab client: chat with the portal agent
+
+From the [portal and VS Code lab](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html). This goes through the project SDK, not the published endpoint, so the conversation keeps the history.
+
+```bash
+pip install "azure-ai-projects==2.3.0" "openai<3" azure-identity python-dotenv
+az login
+```
+
+`.env`:
+
+```dotenv
+PROJECT_ENDPOINT=https://{resource-name}.services.ai.azure.com/api/projects/<project-name>
+AGENT_NAME=it-support-agent
+```
+
+Code Interpreter charts come back as `container_file_citation` annotations. Download them with `containers.files.content`.
+
+```python
+import os
+from pathlib import Path
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
+from dotenv import load_dotenv
+
+load_dotenv()
+project_client = AIProjectClient(
+    endpoint=os.environ["PROJECT_ENDPOINT"],
+    credential=DefaultAzureCredential(),
+)
+openai_client = project_client.get_openai_client()
+agent = project_client.agents.get(agent_name=os.environ["AGENT_NAME"])
+conversation = openai_client.conversations.create(items=[])
+
+while True:
+    prompt = input("You (exit to stop): ").strip()
+    if prompt.lower() in {"exit", "quit"}:
+        break
+    openai_client.conversations.items.create(
+        conversation_id=conversation.id,
+        items=[{"type": "message", "role": "user", "content": prompt}],
+    )
+    response = openai_client.responses.create(
+        conversation=conversation.id,
+        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+        input="",
+    )
+    print("Agent:", response.output_text)
+    for item in response.output:
+        if item.type != "message":
+            continue
+        for content in item.content:
+            for annotation in getattr(content, "annotations", None) or []:
+                if annotation.type == "container_file_citation":
+                    data = openai_client.containers.files.content.retrieve(
+                        container_id=annotation.container_id,
+                        file_id=annotation.file_id,
+                    )
+                    Path(Path(annotation.filename).name).write_bytes(data.read())
+                    print("Saved", annotation.filename)
+
+openai_client.conversations.delete(conversation_id=conversation.id)
+```
+
+Use the test prompts from [04](04-build-agent-azure-portal.md#lab-it-support-agent). Check policy answers against `IT_Policy.txt` and numbers against the CSV.

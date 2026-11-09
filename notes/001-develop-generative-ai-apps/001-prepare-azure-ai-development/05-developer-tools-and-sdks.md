@@ -15,3 +15,5 @@ Three libraries to plan for:
 - **Foundry SDK** connects to a project and to Foundry assets: agents and Foundry IQ knowledge stores.
 - **OpenAI API** is for chat against Foundry models that speak OpenAI syntax.
 - **Foundry Tools SDKs** (or the REST APIs) call the individual tools in the subscription.
+
+In the lab: install Foundry Toolkit, sign in to Azure, select the project, and **Set as default project**. Then **Developer Tools > Build > Model playground**, pick the deployment, and send the same prompt as in the portal. The labs need VS Code, Git, Azure CLI, and Python 3.13.

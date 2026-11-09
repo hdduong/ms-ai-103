@@ -4,7 +4,7 @@
 
 - This YAML is a declarative prompt agent. Hosted agents are code. Workflow agents use a different schema.
 - Designer and YAML stay in sync. You set the name, the model deployment, the description, the instructions, and the extension generates the agent id.
-- For models that support these controls, lower temperature tends to reduce variation and higher temperature increases it. The unit illustrates low ranges around 0.1–0.3 and creative ranges around 0.7–1.0. These are tuning examples, not universal exam thresholds; verify the selected model supports `temperature` and `top_p`.
+- Temperature about 0.1–0.3 for steady answers, 0.7–1.0 for variety. Business agents often sit around 0.3–0.7. Top p default is 1.0.
 - Commit the YAML. One agent, one job. Test in the playground after each change.
 
 ## Prompt agent

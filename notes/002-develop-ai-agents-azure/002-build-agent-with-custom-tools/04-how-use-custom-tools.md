@@ -2,8 +2,9 @@
 
 [How to integrate custom tools](https://learn.microsoft.com/en-us/training/modules/build-agent-with-custom-tools/4-how-use-custom-tools?pivots=text)
 
-- The model selects a tool using its name, description, and parameter schema. For a local function tool, your application dispatches the returned `function_call` to the allowed Python function and submits its result. Hosted OpenAPI/Azure Function tools have different execution plumbing.
+- The model picks the tool from its name, description, and parameters. You do not write the logic that decides. For a function tool, your code still runs the function and sends back `function_call_output`. Azure Function and OpenAPI tools run in Azure.
 - `model` is the deployment name.
+- `create_version` takes `agent_name=`. The Learn function sample passes `name=`, which fails.
 
 ## Function tool
 
@@ -96,7 +97,7 @@ print(agent.name)
 
 ## OpenAPI tool
 
-The JSON file describes the HTTP API: here, `GET https://wttr.in/{location}?format=j1`. Foundry reads the specification and invokes the API. `security: []` is the standard OpenAPI declaration for no authentication requirement; the tool separately uses `OpenApiAnonymousAuthDetails`. Other supported tool authentication options include an API key or managed identity. A top-level `auth: []` is not an OpenAPI security declaration.
+The JSON file is the HTTP API. This one is `GET https://wttr.in/{location}?format=j1`. Foundry reads the spec and sends the request. `security: []` means no auth. The Learn sample writes `auth: []`, which is not an OpenAPI field. Auth on the tool is anonymous, an API key, or a managed identity.
 
 The Learn sample assigns the object to `tool` and then passes `openapi_tool`. That second name is not defined. Pass `tool`.
 
@@ -152,8 +153,124 @@ agent = project_client.agents.create_version(
 print(agent.name)
 ```
 
-## Exercise: run the function the agent picked
+## Lab: astronomy agent
 
-[The complete astronomy exercise](05-exercise-custom-functions.md) includes all three functions, strict schemas, environment setup, the full dispatch loop, verification prompts, and cleanup. Its loop repeatedly handles `function_call` items, dispatches only names in an allowlist, and returns each result under the matching `call_id` on the same conversation.
+Lab: [Use a custom function in an AI agent](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/02-agent-custom-tools.html). The starter `functions.py` has `calculate_observation_cost` and `generate_observation_report`. You write `next_visible_event` ([02](02-why-use-custom-tools.md)).
 
-The snippets above illustrate tool definitions and assume `project_client` already exists. Use `agent_name=`, which is the current `create_version` parameter in the lab's `azure-ai-projects==2.3.0` SDK. Snowfall values in the local example are mock data.
+```bash
+pip install "azure-ai-projects==2.3.0" "openai<3" azure-identity python-dotenv
+az login
+```
+
+`.env`:
+
+```dotenv
+PROJECT_ENDPOINT=https://{resource-name}.services.ai.azure.com/api/projects/<project-name>
+MODEL_DEPLOYMENT_NAME=gpt-5
+```
+
+`agent.py`. The model returns `function_call`. The app runs the function and sends `function_call_output` on the same conversation until no calls are left.
+
+```python
+import json
+import os
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import FunctionTool, PromptAgentDefinition
+from azure.identity import DefaultAzureCredential
+from dotenv import load_dotenv
+from functions import (
+    next_visible_event, calculate_observation_cost, generate_observation_report,
+)
+
+FUNCTIONS = {
+    "next_visible_event": next_visible_event,
+    "calculate_observation_cost": calculate_observation_cost,
+    "generate_observation_report": generate_observation_report,
+}
+
+def function_tool(name, description, properties):
+    return FunctionTool(
+        name=name,
+        description=description,
+        parameters={
+            "type": "object",
+            "properties": properties,
+            "required": list(properties),
+            "additionalProperties": False,
+        },
+        strict=True,
+    )
+
+location = {"type": "string", "description": "continent, e.g. 'south_america'"}
+cost = {
+    "telescope_tier": {"type": "string", "enum": ["standard", "advanced", "premium"]},
+    "hours": {"type": "number"},
+    "priority": {"type": "string", "enum": ["low", "normal", "high", "urgent"]},
+}
+tools = [
+    function_tool("next_visible_event", "Find the next visible astronomical event.", {"location": location}),
+    function_tool("calculate_observation_cost", "Calculate the cost of telescope time.", cost),
+    function_tool(
+        "generate_observation_report",
+        "Generate a report summarizing an astronomical observation.",
+        {"event_name": {"type": "string"}, "location": location, **cost, "observer_name": {"type": "string"}},
+    ),
+]
+
+load_dotenv()
+project_client = AIProjectClient(
+    endpoint=os.environ["PROJECT_ENDPOINT"],
+    credential=DefaultAzureCredential(),
+)
+openai_client = project_client.get_openai_client()
+agent = project_client.agents.create_version(
+    agent_name="astronomy-agent",
+    definition=PromptAgentDefinition(
+        model=os.environ["MODEL_DEPLOYMENT_NAME"],  # deployment name
+        instructions="You are an astronomy observations assistant that helps users find information about astronomical events and calculate telescope rental costs.",
+        tools=tools,
+    ),
+)
+reference = {"agent_reference": {"name": agent.name, "version": agent.version, "type": "agent_reference"}}
+conversation = openai_client.conversations.create()
+
+while True:
+    prompt = input("You (exit to stop): ").strip()
+    if prompt.lower() in {"exit", "quit"}:
+        break
+    response = openai_client.responses.create(
+        conversation=conversation.id,
+        input=prompt,
+        extra_body=reference,
+    )
+    for _ in range(8):
+        calls = [item for item in response.output if item.type == "function_call"]
+        if not calls:
+            break
+        outputs = []
+        for call in calls:
+            function = FUNCTIONS.get(call.name)
+            result = function(**json.loads(call.arguments)) if function else json.dumps({"error": "unknown function"})
+            outputs.append({"type": "function_call_output", "call_id": call.call_id, "output": result})
+        response = openai_client.responses.create(
+            conversation=conversation.id,
+            input=outputs,
+            extra_body=reference,
+        )
+    print("Agent:", response.output_text)
+
+openai_client.conversations.delete(conversation_id=conversation.id)
+project_client.agents.delete_version(agent_name=agent.name, agent_version=agent.version)
+```
+
+Try:
+
+```text
+Find me the next event I can see from South America and give me the cost for 5 hours of premium telescope time at normal priority.
+Generate that information in a report for Bellows College.
+```
+
+- The sample rates are premium $300/hour and normal x1.25, so 5 hours is **$1,875**. High priority (x1.75) would be $2,625.
+- The report lands in a new `report_<event>_<timestamp>.txt` file next to the script.
+- Keep every turn and every result on the one conversation. Mixing in `previous_response_id` can drop a function output.
+- Events are sample data with month and day only. Late in the year the search can come back empty.

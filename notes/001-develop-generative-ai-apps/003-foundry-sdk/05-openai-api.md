@@ -8,7 +8,7 @@
 - Read `completion.choices[0].message.content`. There is no `output_text` and no `previous_response_id`.
 - Next turn: append the assistant reply, append the new user message, and send the whole list again.
 
-The current [playground unit](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/02-chat-playground?pivots=text) describes selecting **Responses** or **Chat Completions** when generating code. Inspect the selected API and generated request fields; the portal UI can change. The [chat exercise](06-exercise-chat-app.md) implements both APIs.
+The playground's **Code** button can generate either API ([unit 02](02-chat-playground.md)).
 
 ## One reply
 
@@ -44,6 +44,21 @@ conversation_messages.append(
 completion = openai_client.chat.completions.create(
     model="gpt-4.1",  # deployment name
     messages=conversation_messages,
+)
+print(completion.choices[0].message.content)
+```
+
+## Lab: swap in Chat Completions
+
+In the [chat app](04-responses-api.md#lab-chat-app), replace the `responses.create` call and its print with this. It sends only the system message and this turn's prompt, so the app forgets earlier turns. `previous_response_id` is not a Chat Completions field.
+
+```python
+completion = client.chat.completions.create(
+    model=deployment,  # deployment name
+    messages=[
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": prompt},
+    ],
 )
 print(completion.choices[0].message.content)
 ```

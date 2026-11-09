@@ -12,4 +12,3 @@
 | 06 | [Configure and manage agents in Visual Studio Code](https://learn.microsoft.com/en-us/training/modules/develop-ai-agents-azure-vs-code/6-configure-manage-agents?pivots=text) | [06-configure-manage-agents.md](06-configure-manage-agents.md) |
 | 07 | [Extend agent capabilities with tools](https://learn.microsoft.com/en-us/training/modules/develop-ai-agents-azure-vs-code/7-extend-agent-capabilities?pivots=text) | [07-extend-agent-capabilities.md](07-extend-agent-capabilities.md) |
 | 08 | [Test, deploy, and integrate agents](https://learn.microsoft.com/en-us/training/modules/develop-ai-agents-azure-vs-code/8-test-deploy-integrate?pivots=text) | [08-test-deploy-integrate.md](08-test-deploy-integrate.md) |
-| 09 | [Exercise — Build AI agents with portal and VS Code](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html) | [09-exercise-agent-portal-vscode.md](09-exercise-agent-portal-vscode.md) |
