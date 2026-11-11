@@ -11,19 +11,30 @@
 
 ![it-support-agent in the portal: model, instructions, tools, the chat playground, YAML, and Publish.](images/04-agent-playground.png)
 
-The exercise loads the portal agent and sends one turn.
+## Lab: it-support-agent
 
-```python
-agent = project_client.agents.get(agent_name="it-support-agent")
-conversation = openai_client.conversations.create(items=[])
-openai_client.conversations.items.create(
-    conversation_id=conversation.id,
-    items=[{"type": "message", "role": "user", "content": "My laptop will not join the VPN."}],
-)
-response = openai_client.responses.create(
-    conversation=conversation.id,
-    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    input="",
-)
-print(response.output_text)
+The [Build AI agents with portal and VS Code exercise](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html) applies the settings above to an IT help desk. Create/select a Foundry project in the new portal experience, create `it-support-agent`, and select its deployed model (the exercise uses the default, such as `gpt-5`). Set these adapted instructions, then **Save**:
+
+```text
+You are an IT Support Agent for Contoso Corporation.
+Help employees with technical issues and IT policy questions.
+Use the uploaded policy documentation for policy answers.
+Be professional and helpful. If you don't know, admit it and suggest IT support.
+Collect the required details before proposing a support ticket.
 ```
+
+| Tool | File from the lab | Used for |
+| --- | --- | --- |
+| File search | [IT_Policy.txt](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/01-build-agent-portal-and-vscode/IT_Policy.txt) | Policy answers |
+| Code interpreter (+ Files) | [system_performance.csv](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/01-build-agent-portal-and-vscode/system_performance.csv) | Metrics and charts |
+
+Download the linked files and upload each to the corresponding tool. File Search indexes policy text for retrieval; Code Interpreter needs the CSV as a file in its execution environment. Uploading one file to one tool does not make it available to the other. Save the agent, wait for File Search indexing, then test both tools in the playground:
+
+```text
+What's the policy for password resets?
+Analyze the system performance data and identify when CPU usage exceeded 80%.
+Create a line chart showing memory usage over time.
+What are the average, minimum, and maximum disk usage values?
+```
+
+A correct policy answer should use the document, and a chart prompt should produce an artifact rather than just a description of a chart. If one fails, inspect that tool's file attachment before changing the model prompt. Next, open the same agent in [VS Code](05-set-up-vs-code.md); [unit 08](08-test-deploy-integrate.md#lab-client-chat-with-the-portal-agent) reuses it from Python.

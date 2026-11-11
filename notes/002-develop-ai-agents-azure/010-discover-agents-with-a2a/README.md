@@ -1,0 +1,13 @@
+# 010 Discover Azure AI Agents with A2A
+
+[discover-agents-with-a2a](https://learn.microsoft.com/en-us/training/modules/discover-agents-with-a2a/)
+
+| Sequence | Unit | Notes |
+| --- | --- | --- |
+| 01 | Introduction | |
+| 02 | [Define an A2A agent](https://learn.microsoft.com/en-us/training/modules/discover-agents-with-a2a/2-define-a2a-agent?pivots=text) | [02-define-a2a-agent.md](02-define-a2a-agent.md) |
+| 03 | [Implement an agent executor](https://learn.microsoft.com/en-us/training/modules/discover-agents-with-a2a/3-implement-agent-executor?pivots=text) | [03-implement-agent-executor.md](03-implement-agent-executor.md) |
+| 04 | [Host an A2A server](https://learn.microsoft.com/en-us/training/modules/discover-agents-with-a2a/4-host-a2a-agent-server?pivots=text) | [04-host-a2a-agent-server.md](04-host-a2a-agent-server.md) |
+| 05 | [Connect to your A2A agent](https://learn.microsoft.com/en-us/training/modules/discover-agents-with-a2a/5-connect-to-a2a-agent?pivots=text) | [05-connect-to-a2a-agent.md](05-connect-to-a2a-agent.md) |
+
+The title/outline scenario is assembled across the concept lessons: 02 supplies the starter and Agent Card, 03 connects backend work to task events, 04 hosts the protocol, and 05 explains the router and runs the complete example. Follow the file map in 02 so every snippet has a clear destination.

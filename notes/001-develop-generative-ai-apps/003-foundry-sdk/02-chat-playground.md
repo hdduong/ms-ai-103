@@ -4,7 +4,7 @@
 
 - Try a deployed model in the portal before writing code. Open the deployment under **Build > Models** and stay on **Playground**.
 - **Instructions** is the system message for every turn. The same pane has Tools, Knowledge, Memory, and Guardrail. The model row shows the deployment type (Global Standard here).
-- **Temperature** and **max tokens** still control variety and length.
+- Where the model supports them, **Temperature** controls sampling variety and **max tokens** limits output. The [Responses lesson](04-responses-api.md) explains reasoning-model parameter differences.
 - **Continue in code** builds a sample from the current session. Choose the API (Responses or Chat Completions), the language, and the SDK.
 - The sample is filled in with the endpoint, the deployment name, and the settings you just used.
 - Workflow: try prompts in the playground, copy the sample, then change it in the app.

@@ -2,158 +2,149 @@
 
 [How to integrate custom tools](https://learn.microsoft.com/en-us/training/modules/build-agent-with-custom-tools/4-how-use-custom-tools?pivots=text)
 
-- The model selects a tool using its name, description, and parameter schema. For a local function tool, your application dispatches the returned `function_call` to the allowed Python function and submits its result. Hosted OpenAPI/Azure Function tools have different execution plumbing.
-- `model` is the deployment name.
+The model chooses which function to request. Your application chooses which functions are allowed to run, executes them, and sends their outputs back. The next model response can request another function or answer the user. Hosted Azure Function and OpenAPI tools delegate execution to Azure instead, as shown in [unit 03](03-custom-tool-options.md#other-execution-options).
 
-## Function tool
+## Lab: astronomy agent
 
-JSON schema, `required`, `additionalProperties: False`, `strict=True`. Pass the tool list on `PromptAgentDefinition`.
+This completes the [Microsoft Learn custom-function exercise](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/02-agent-custom-tools.html) using [`functions.py` from unit 02](02-why-use-custom-tools.md) and [`tools.py` from unit 03](03-custom-tool-options.md#describe-the-three-functions-to-the-model). The three lessons form one application: data and actions → tool schemas → execution loop.
+
+Create or select a Foundry project, deploy the exercise's `gpt-5` model, and copy the project endpoint ending in `/api/projects/<project-name>`. Use your actual deployment name if it differs. From the `Labfiles/02-agent-custom-tools/Python` directory used in unit 02:
+
+```bash
+python -m venv .venv
+# macOS/Linux
+source .venv/bin/activate
+# Windows PowerShell instead: .venv\Scripts\Activate.ps1
+python -m pip install "azure-ai-projects==2.3.0" "openai<3" azure-identity python-dotenv
+az login
+```
+
+Create `.env` locally, using an identity with access to the project:
+
+```dotenv
+PROJECT_ENDPOINT=https://{resource-name}.services.ai.azure.com/api/projects/<project-name>
+MODEL_DEPLOYMENT_NAME=gpt-5
+```
+
+### Match each call to its result
+
+Start `agent.py` with this block. `FUNCTIONS` is the allowlist of executable functions. `finish_turn` keeps all requests and results on one conversation and checks whether the response is final before enforcing its eight-round limit.
 
 ```python
 import json
+import os
+from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import FunctionTool, PromptAgentDefinition
-
-def recent_snowfall(location: str) -> str:
-    """Get recent snowfall totals for a city."""
-    totals = {"Seattle": "0 inches", "Denver": "2 inches"}
-    snow = totals.get(location, "Data not available.")
-    return json.dumps({"location": location, "snowfall": snow})
-
-function_tool = FunctionTool(
-    name="recent_snowfall",
-    parameters={
-        "type": "object",
-        "properties": {
-            "location": {"type": "string", "description": "City name."},
-        },
-        "required": ["location"],
-        "additionalProperties": False,
-    },
-    description="Get recent snowfall totals for a city.",
-    strict=True,
-)
-agent = project_client.agents.create_version(
-    agent_name="snowfall-agent",
-    definition=PromptAgentDefinition(
-        model="gpt-4.1",  # deployment name
-        instructions="You track snowfall. Use the function when a city is asked.",
-        tools=[function_tool],
-    ),
-)
-print(agent.name)
-```
-
-## Azure Function tool
-
-Input queue and output queue, plus the function name and the same kind of parameter schema.
-
-```python
-from azure.ai.projects.models import (
-    AzureFunctionBinding,
-    AzureFunctionDefinition,
-    AzureFunctionDefinitionFunction,
-    AzureFunctionStorageQueue,
-    AzureFunctionTool,
-    PromptAgentDefinition,
+from azure.identity import DefaultAzureCredential
+from dotenv import load_dotenv
+from functions import (
+    next_visible_event, calculate_observation_cost, generate_observation_report,
 )
 
-tool = AzureFunctionTool(
-    azure_function=AzureFunctionDefinition(
-        input_binding=AzureFunctionBinding(
-            storage_queue=AzureFunctionStorageQueue(
-                queue_name="snowfall-in",
-                queue_service_endpoint="https://{storage}.queue.core.windows.net",
-            ),
-        ),
-        output_binding=AzureFunctionBinding(
-            storage_queue=AzureFunctionStorageQueue(
-                queue_name="snowfall-out",
-                queue_service_endpoint="https://{storage}.queue.core.windows.net",
-            ),
-        ),
-        function=AzureFunctionDefinitionFunction(
-            name="queue_trigger",
-            description="Get snowfall for a city.",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "location": {"type": "string", "description": "City name."},
-                },
-            },
-        ),
-    ),
-)
-agent = project_client.agents.create_version(
-    agent_name="snowfall-function-agent",
-    definition=PromptAgentDefinition(
-        model="gpt-4.1",  # deployment name
-        instructions="Use the Azure Function when a city is asked.",
-        tools=[tool],
-    ),
-)
-print(agent.name)
-```
-
-## OpenAPI tool
-
-The JSON file describes the HTTP API: here, `GET https://wttr.in/{location}?format=j1`. Foundry reads the specification and invokes the API. `security: []` is the standard OpenAPI declaration for no authentication requirement; the tool separately uses `OpenApiAnonymousAuthDetails`. Other supported tool authentication options include an API key or managed identity. A top-level `auth: []` is not an OpenAPI security declaration.
-
-The Learn sample assigns the object to `tool` and then passes `openapi_tool`. That second name is not defined. Pass `tool`.
-
-```json
-{
-  "openapi": "3.0.0",
-  "info": {"title": "get weather data", "version": "v1.0.0"},
-  "servers": [{"url": "https://wttr.in"}],
-  "security": [],
-  "paths": {
-    "/{location}": {
-      "get": {
-        "operationId": "GetCurrentWeather",
-        "parameters": [
-          {"name": "location", "in": "path", "required": true, "schema": {"type": "string"}},
-          {"name": "format", "in": "query", "required": true, "schema": {"type": "string", "default": "j1"}}
-        ],
-        "responses": {"200": {"description": "Weather response", "content": {"application/json": {"schema": {"type": "object"}}}}}
-      }
-    }
-  }
+FUNCTIONS = {
+    "next_visible_event": next_visible_event,
+    "calculate_observation_cost": calculate_observation_cost,
+    "generate_observation_report": generate_observation_report,
 }
+
+
+from tools import TOOLS
+
+
+def finish_turn(client, conversation_id, reference, user_input):
+    response = client.responses.create(
+        conversation=conversation_id, input=user_input, extra_body=reference,
+    )
+    for round_number in range(9):
+        if response.status == "failed":
+            raise RuntimeError(str(response.error))
+        calls = [item for item in response.output if item.type == "function_call"]
+        if not calls:
+            return response.output_text
+        if round_number == 8:
+            raise RuntimeError("Stopped after eight function-call rounds.")
+        outputs = []  # Only outputs for this response; never resend old call IDs.
+        for call in calls:
+            function = FUNCTIONS.get(call.name)
+            if function is None:
+                result = json.dumps({"error": f"Unknown function: {call.name}"})
+            else:
+                try:
+                    result = function(**json.loads(call.arguments))
+                except (ValueError, TypeError) as exc:
+                    result = json.dumps({"error": str(exc)})
+            outputs.append({"type": "function_call_output", "call_id": call.call_id,
+                            "output": result})
+        response = client.responses.create(
+            conversation=conversation_id, input=outputs, extra_body=reference,
+        )
+    raise RuntimeError("Stopped after eight function-call rounds.")
+
+
 ```
+
+The key is `call_id`: it associates each `function_call_output` with the exact call the model requested. Return only results from the latest response; resending old call IDs can corrupt the conversation. Expected JSON or argument errors become tool results, while a failed response or exhausted loop raises a visible application error. This avoids printing an empty answer when the model still needs a tool result.
+
+### Connect the functions to the agent
+
+Append this block to `agent.py`:
 
 ```python
-import json
-from azure.ai.projects.models import (
-    OpenApiAnonymousAuthDetails,
-    OpenApiFunctionDefinition,
-    OpenApiTool,
-    PromptAgentDefinition,
-)
+def main():
+    load_dotenv()
+    with (
+        DefaultAzureCredential() as credential,
+        AIProjectClient(endpoint=os.environ["PROJECT_ENDPOINT"],
+                        credential=credential) as project,
+        project.get_openai_client() as client,
+    ):
+        agent = project.agents.create_version(
+            agent_name="astronomy-agent",
+            definition=PromptAgentDefinition(
+                model=os.environ["MODEL_DEPLOYMENT_NAME"],
+                instructions=("You are an astronomy observations assistant. Use the tools "
+                              "for sample events and rental estimates. Ask for missing "
+                              "parameters. Generate a report only when asked. Explain "
+                              "that the data are illustrative and no booking is made."),
+                tools=TOOLS,
+            ),
+        )
+        conversation = None
+        try:
+            conversation = client.conversations.create()
+            reference = {"agent_reference": {"name": agent.name, "version": agent.version,
+                                              "type": "agent_reference"}}
+            while True:
+                prompt = input("You (exit to stop): ").strip()
+                if prompt.lower() in {"exit", "quit"}:
+                    break
+                if prompt:
+                    print(finish_turn(client, conversation.id, reference, prompt))
+        finally:
+            try:
+                if conversation is not None:
+                    client.conversations.delete(conversation_id=conversation.id)
+            finally:
+                project.agents.delete_version(agent_name=agent.name,
+                                              agent_version=agent.version)
 
-with open("weather_openapi.json", "r") as spec_file:
-    openapi_weather = json.load(spec_file)
 
-tool = OpenApiTool(
-    openapi=OpenApiFunctionDefinition(
-        name="get_weather",
-        spec=openapi_weather,
-        description="Retrieve weather information for a location.",
-        auth=OpenApiAnonymousAuthDetails(),
-    ),
-)
-agent = project_client.agents.create_version(
-    agent_name="openapi-agent",
-    definition=PromptAgentDefinition(
-        model="gpt-4.1",  # deployment name
-        instructions="You are a weather assistant. Use the API to fetch weather data.",
-        tools=[tool],
-    ),
-)
-print(agent.name)
+if __name__ == "__main__":
+    main()
 ```
 
-## Exercise: run the function the agent picked
+`create_version` uses `agent_name=` in this SDK. `tools=TOOLS` publishes the contracts; it does not run the functions. Including the newly created `version` in `agent_reference` ensures this chat uses those exact contracts. The context managers close clients, and `finally` deletes this application's conversation and agent version even when a turn fails.
 
-[The complete astronomy exercise](05-exercise-custom-functions.md) includes all three functions, strict schemas, environment setup, the full dispatch loop, verification prompts, and cleanup. Its loop repeatedly handles `function_call` items, dispatches only names in an allowlist, and returns each result under the matching `call_id` on the same conversation.
+### Follow the result through the conversation
 
-The snippets above illustrate tool definitions and assume `project_client` already exists. Use `agent_name=`, which is the current `create_version` parameter in the lab's `azure-ai-projects==2.3.0` SDK. Snowfall values in the local example are mock data.
+```bash
+python agent.py
+```
+
+| Ask in the same session | What the code should do |
+| --- | --- |
+| Find the next event in South America and estimate five hours on a premium telescope with normal priority. | Read the event file and calculate **$1,875** from the sample rates |
+| What would that cost with high priority? | Reuse the conversation context and calculate **$2,625** |
+| Generate a report for that event, South America, five hours premium, high priority, observer Alex. | Create a file inside `reports/` and return its path |
+
+Read the generated file and compare the numbers with the tool output. An event lookup can return no remaining sample event; the model should report that rather than inventing one. The program's cleanup removes its conversation and created version. The Foundry project and model deployment remain available for further lessons.

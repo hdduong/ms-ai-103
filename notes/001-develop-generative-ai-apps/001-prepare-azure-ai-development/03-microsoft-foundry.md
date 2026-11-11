@@ -21,3 +21,27 @@ Assets in a project:
 In the portal you find, compare, deploy, and test models, create agents, add MCP and Foundry IQ connections, try Foundry Tools, set access, and copy endpoints and keys.
 
 This module uses the current project layout. Classic projects use a hub. The portal is moving to the new UI, and some tasks are still only in the classic portal.
+
+## Lab: create a project and test a model
+
+The [Prepare for an AI development project](https://microsoftlearning.github.io/mslearn-ai-studio/Instructions/Exercises/01-Explore-ai-studio.html) exercise makes the resource/project relationship concrete: create a project, deploy one model, and find the connection details a later application needs. This part uses the portal; [unit 05](05-developer-tools-and-sdks.md#use-the-same-project-in-vs-code) continues with VS Code.
+
+1. Turn on **New Foundry** and create a project. Pick a region that has the model and the Responses API.
+2. **Discover > Models**: deploy `gpt-5.2` with the default settings. Write down the deployment name. Code passes it as `model`.
+3. In the playground, set the instructions and send the prompt:
+
+```text
+Instructions: You are an AI assistant that can provide information and advice about AI software development.
+Prompt: Describe three key considerations for working with Large Language Models for AI application development.
+```
+
+4. **Manage** shows the resource with its projects, deployments, and shared connections. The project home page lists the endpoints.
+
+| Detail | Used for |
+| --- | --- |
+| Project endpoint | Foundry project APIs (agents, knowledge) and models through the project |
+| Azure OpenAI endpoint | OpenAI-style calls. The chat lab uses the `/openai/v1/` base URL |
+| Deployment name | The `model=` value. It can differ from the catalog name |
+| Auth | Key or Microsoft Entra ID. The coding examples use `DefaultAzureCredential` |
+
+The deployment is the callable model, while the project is its development context. Verify that the playground answers the test prompt and that the deployment name in its settings matches the name you recorded. These details become the configuration in [the Responses API lesson](../003-foundry-sdk/04-responses-api.md#prepare-the-client).

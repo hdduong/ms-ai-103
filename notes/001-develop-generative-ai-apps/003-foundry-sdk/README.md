@@ -9,6 +9,3 @@
 | 03 | [Choose an endpoint and SDK](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/03-microsoft-foundry-sdk?pivots=text) | [03-choose-an-endpoint-and-sdk.md](03-choose-an-endpoint-and-sdk.md) |
 | 04 | [Generate responses with the Responses API](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/04-responses-api?pivots=text) | [04-responses-api.md](04-responses-api.md) |
 | 05 | [Generate responses with the Chat Completions API](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/05-openai-api?pivots=text) | [05-openai-api.md](05-openai-api.md) |
-| 06 | [Exercise: Create a generative AI chat app](https://learn.microsoft.com/en-us/training/modules/foundry-sdk/06-exercise) | [06-exercise-chat-app.md](06-exercise-chat-app.md) |
-
-Reviewed against current Microsoft Learn on **2026-11-07**. The exercise lesson records its official source snapshot, setup, code or portal steps, and validation limits. Existing screenshots retain the deployments used when they were captured.

@@ -2,31 +2,29 @@
 
 [Deploy models to endpoints](https://learn.microsoft.com/en-us/training/modules/model-catalog-evaluate/4-deploy-models?pivots=text)
 
-- Deploy from **Discover → Models**. Custom settings change the deployment type and name.
-- The **deployment name** is what the app passes as `model`. It can differ from the catalog ID.
-- **Global Standard** is a common starting point when supported and suitable for the application's processing-location requirements. Availability and quota depend on model, region, and subscription.
+- Deploy from **Discover > Models**. Default settings are the fast path. Custom settings change the type and name.
+- The **deployment name** is what the app passes as `model`. It can differ from the catalog id.
+- Prefer **Global Standard** when the model supports it. Pay per token, lowest price, highest quota, new models first.
 
 ![gpt-4.1 details. Deployment type GlobalStandard, provisioning Succeeded, key masked. The endpoint is the OpenAI v1 URL on the Foundry resource.](images/04-deployment-details.png)
 
-## Deployment choice
+## Deployment types
 
-| Processing scope | Types in the current deployment reference | Main distinction |
+| Where data is processed | Types | Notes |
 | --- | --- | --- |
-| Global | Standard, Provisioned, Batch | Processing can use global infrastructure |
-| Data Zone | Standard, Provisioned, Batch | Processing remains in the selected US, EU, or APAC zone |
-| Azure geography | Standard, Regional Provisioned | Processing remains in the chosen Azure geography; no regional Batch type is listed |
-| Developer | Fine-tuned model evaluation | Short-lived evaluation deployment |
+| Global | Standard, Provisioned, Batch | Any Azure region |
+| Data Zone | Standard, Provisioned, Batch | Inside the US, EU, or APAC zone |
+| Azure geography | Standard, Regional Provisioned | Inside one geography. No Batch here |
+| Developer | Fine-tuned model evaluation | 24-hour lifetime, no SLA, no data residency |
 
-- **Standard** is token-based consumption. **Provisioned** reserves throughput using PTUs.
-- **Batch** offers discounted asynchronous processing, targeting completion within 24 hours; this is not a completion guarantee.
-- **Developer** has a 24-hour lifetime, no availability SLA, and no data-residency guarantee. Use it for evaluation.
-- Data at rest and inference processing location are separate considerations.
+- **Standard** is pay per token. **Provisioned** reserves throughput (PTU).
+- **Batch** is about half price for async jobs, with a 24-hour target (not a guarantee).
+- The Learn unit says Regional stays in one region. The current [deployment types reference](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/concepts/deployment-types) says the geography, possibly across its regions.
+- Data at rest always stays in the resource's geography. The table is about inference.
 
-**Review note (2026-11-07):** The training unit describes regional processing as a single region. The current [deployment-types product reference](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/concepts/deployment-types) describes processing within an **Azure geography**, potentially across its regions. Use that current product reference when evaluating residency requirements, and check model-specific availability.
+## After deploy
 
-## After deployment
-
-- Partner/community models may require a Marketplace agreement. Managed compute also requires VM quota and an instance count.
-- Check **Succeeded** status and test in the playground. Manage deployments under **Build → Models**.
-- Calling the deployment requires a compatible endpoint, authentication, and its deployment name. The direct OpenAI SDK lab uses the **Azure OpenAI `/openai/v1/` endpoint** with Microsoft Entra authentication.
-- The screenshot retains the earlier `gpt-4.1` example. The [current comparison exercise](06-exercise-compare-models.md) deploys `gpt-5.2` and `gpt-5-mini`.
+- Partner and community models may need a Marketplace agreement. Azure OpenAI models sold by Azure do not.
+- Managed compute also needs a VM SKU (quota) and an instance count.
+- After deploy, the playground opens. Status should be **Succeeded**. Manage deployments under Build > Models. The details page has the endpoint, key or token, and metrics.
+- To call it you need the endpoint (project or OpenAI v1), auth (Entra ID in production, or a key), and the deployment name.

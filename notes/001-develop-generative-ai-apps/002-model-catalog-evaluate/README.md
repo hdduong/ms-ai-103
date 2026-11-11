@@ -9,6 +9,3 @@
 | 03 | [Select models using benchmarks](https://learn.microsoft.com/en-us/training/modules/model-catalog-evaluate/3-select-models-benchmarks?pivots=text) | [03-select-models-benchmarks.md](03-select-models-benchmarks.md) |
 | 04 | [Deploy models to endpoints](https://learn.microsoft.com/en-us/training/modules/model-catalog-evaluate/4-deploy-models?pivots=text) | [04-deploy-models.md](04-deploy-models.md) |
 | 05 | [Evaluate model performance](https://learn.microsoft.com/en-us/training/modules/model-catalog-evaluate/5-evaluate-performance?pivots=text) | [05-evaluate-performance.md](05-evaluate-performance.md) |
-| 06 | [Exercise: Explore and compare models](https://learn.microsoft.com/en-us/training/modules/model-catalog-evaluate/6-exercise) | [06-exercise-compare-models.md](06-exercise-compare-models.md) |
-
-Reviewed against current Microsoft Learn on **2026-11-07**. The exercise lesson records its official source snapshot, setup, code or portal steps, and validation limits. Existing screenshots retain the deployments used when they were captured.

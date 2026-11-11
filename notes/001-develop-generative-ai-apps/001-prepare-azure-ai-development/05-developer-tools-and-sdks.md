@@ -15,3 +15,13 @@ Three libraries to plan for:
 - **Foundry SDK** connects to a project and to Foundry assets: agents and Foundry IQ knowledge stores.
 - **OpenAI API** is for chat against Foundry models that speak OpenAI syntax.
 - **Foundry Tools SDKs** (or the REST APIs) call the individual tools in the subscription.
+
+## Use the same project in VS Code
+
+Continue the [project exercise](https://microsoftlearning.github.io/mslearn-ai-studio/Instructions/Exercises/01-Explore-ai-studio.html) after [creating the project and testing its model](03-microsoft-foundry.md#lab-create-a-project-and-test-a-model). Its prerequisites include VS Code, Git, Azure CLI, and Python 3.13.
+
+1. Install Foundry Toolkit and sign in to the Azure tenant containing your project.
+2. Select that project and choose **Set as default project**.
+3. Open **Developer Tools > Build > Model playground**, select the deployment you created, and send the same prompt as in the portal.
+
+The two playgrounds call the same deployment. Setting a default project selects the extension's working context; it does not create a new deployment or grant permission to one. Compare the selected deployment and response before moving to SDK code.

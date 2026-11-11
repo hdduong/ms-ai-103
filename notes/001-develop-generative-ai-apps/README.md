@@ -11,17 +11,17 @@
 | 005 | [Optimize generative AI model performance with Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/optimize-generative-ai-model-performance/) | [005-optimize-generative-ai-model-performance](005-optimize-generative-ai-model-performance/README.md) |
 | 006 | [Implement a responsible generative AI solution in Microsoft Foundry](https://learn.microsoft.com/en-us/training/modules/responsible-ai-studio/) | [006-responsible-ai-studio](006-responsible-ai-studio/README.md) |
 
-## Reviewed exercises
+## Labs
 
-Reviewed **2026-11-07** against the current Microsoft Learn units and the official `MicrosoftLearning/mslearn-ai-studio` lab snapshot `b702dc2fd9f9411b5eb1f86b9259db6515cd9c48`. Existing screenshots remain useful illustrations; current model and UI details are documented in each exercise.
+Each exercise is explained inside the lessons that teach its concepts. Read the setup, code or portal steps, and interpretation together; there are no separate exercise pages.
 
-| Module | Exercise lesson | Material included |
+| Module | Lab | In lesson |
 | --- | --- | --- |
-| 001 | [Prepare for an AI development project](001-prepare-azure-ai-development/07-exercise-prepare-project.md) | Portal + VS Code project setup |
-| 002 | [Explore and compare models](002-model-catalog-evaluate/06-exercise-compare-models.md) | Portal model comparison and evaluation |
-| 003 | [Create a generative AI chat app](003-foundry-sdk/06-exercise-chat-app.md) | Python: Chat Completions, Responses, state, streaming, async |
-| 004 | [Create a generative AI app that uses tools](004-use-generative-ai-tools/07-exercise-use-tools.md) | Python: web search + brochure file search |
-| 005 | [Fine-tune a language model](005-optimize-generative-ai-model-performance/06-exercise-fine-tune.md) | Portal fine-tuning + supplied JSONL record |
-| 006 | [Apply guardrails to prevent harmful output](006-responsible-ai-studio/07-exercise-guardrails.md) | Portal guardrail configuration and interpretation |
+| 001 | Prepare for an AI development project (portal) | [03 Project and deployment](001-prepare-azure-ai-development/03-microsoft-foundry.md#lab-create-a-project-and-test-a-model), [05 VS Code](001-prepare-azure-ai-development/05-developer-tools-and-sdks.md#use-the-same-project-in-vs-code) |
+| 002 | Explore and compare models (portal) | [03 Benchmarks](002-model-catalog-evaluate/03-select-models-benchmarks.md#lab-compare-two-models-side-by-side), [05 Evaluate](002-model-catalog-evaluate/05-evaluate-performance.md#lab-evaluate-with-synthetic-data) |
+| 003 | Create a generative AI chat app (Python) | [04 Responses API](003-foundry-sdk/04-responses-api.md#lab-chat-app), [05 Chat Completions](003-foundry-sdk/05-openai-api.md#lab-swap-in-chat-completions) |
+| 004 | Create a generative AI app that uses tools (Python) | [04 Web retrieval](004-use-generative-ai-tools/04-web-search.md#apply-web-search-to-the-travel-assistant), [05 Brochure retrieval and complete app](004-use-generative-ai-tools/05-file-search.md#lab-brochures-plus-web-search) |
+| 005 | Fine-tune a language model (portal) | [04 Fine-tune](005-optimize-generative-ai-model-performance/04-fine-tune-model.md#lab-fine-tune-gpt-5-in-the-portal) |
+| 006 | Apply guardrails to prevent harmful output (portal) | [04 Baseline measurement](006-responsible-ai-studio/04-measure-harms.md#establish-the-guardrail-baseline), [05 Guardrail change and comparison](006-responsible-ai-studio/05-mitigate-harms.md#lab-raise-the-content-filters) |
 
-Code examples are assembled from the official exercise instructions with small documented improvements. Dependency names reflect that snapshot and are not a version lock. Python syntax and links were checked; Azure resources and paid lab runs were not executed. See [source attribution](../../THIRD_PARTY_NOTICES.md).
+Lab code is adapted from [MicrosoftLearning/mslearn-ai-studio](https://github.com/MicrosoftLearning/mslearn-ai-studio) (MIT). See [third-party notices](../../THIRD_PARTY_NOTICES.md).

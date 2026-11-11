@@ -9,5 +9,20 @@
 - System-message checklist: role, boundaries, output format, and what to do when unsure.
 - Patterns: persona, a format template, chain of thought (for non-reasoning models; reasoning models already do the steps), few-shot versus zero-shot.
 - Separate instructions from source text with `---`, headings, or XML tags. If instructions are ignored, repeat them at the end. Later text weighs more (recency bias).
-- Where the model supports them, adjust **temperature** or **top_p** one at a time. Lower temperature reduces sampling variation; it does not make an answer factually correct. Check [reasoning-model parameter support](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/reasoning) before sending these settings.
-- Start here for tone, format, and instructions. You can include private or recent facts as prompt context, but prompting alone does not retrieve them automatically. Use RAG when that context must be found from a data source; long prompts also cost tokens.
+- Change **temperature** or **top_p**, not both. Low temperature (about 0.2) for facts. Higher (about 0.7) for creative text. [Reasoning models](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/reasoning) may not accept these settings.
+- Start here when you need tone, format, or instructions. Instructions alone do not fetch private or newer facts; supplied context can include them. RAG automates finding that context, and long prompts cost tokens.
+
+## Use instructions to choose the right source
+
+In the [travel tools application](../004-use-generative-ai-tools/05-file-search.md#lab-brochures-plus-web-search), the prompt defines a role and a source-selection policy:
+
+```python
+instructions = (
+    "You are a travel assistant that provides information on travel services "
+    "available from Margie's Travel. Answer questions about services offered "
+    "by Margie's Travel using the provided travel brochures. Search the web "
+    "for general information about destinations or current travel advice."
+)
+```
+
+This is the `instructions` variable from that application's request. The first sentence defines the role; the next separates company offerings from public destination advice. The instruction does not supply brochures or execute a search: the app must also attach the corresponding tools. To evaluate a prompt change, keep the deployment, documents, and test questions fixed and inspect which sources the response used.
