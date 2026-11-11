@@ -11,6 +11,6 @@ Models are probabilistic and depend on training data. Users trust the human-like
 - **Transparency.** Tell users the purpose, how it works, and the limits. For a model, that includes how many cases it was trained on, which features drive predictions, and the confidence score. For facial recognition, say how images are used, how long they are kept, and who can access them.
 - **Accountability.** People who train the model and write the decision logic are responsible, even when the system looks autonomous. Work inside a defined governance and legal framework.
 
-In Foundry these principles become guardrail controls. Reliability and safety is **Content harms**. Privacy and security is **Sensitive data leakage (PII)**. The responsible-AI exercise raises these four content-harm sliders.
+In Foundry these principles become guardrail controls. Reliability and safety is **Content harms**. Privacy and security is **Sensitive data leakage (PII)**. The [responsible-AI lab](../006-responsible-ai-studio/05-mitigate-harms.md#lab-raise-the-content-filters) raises these four content-harm sliders from Medium to **Highest blocking**.
 
 ![Create guardrail, Content harms: Hate, Sexual, Self-harm, and Violence at Medium blocking on user input and output. Protected material and PII sit below.](images/06-guardrail-content-harms.png)

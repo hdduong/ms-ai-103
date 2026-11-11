@@ -28,10 +28,12 @@ project_client = AIProjectClient(
     credential=DefaultAzureCredential(),
     endpoint=project_endpoint,
 )
-openai_client = project_client.get_openai_client(api_version="2024-10-21")
+openai_client = project_client.get_openai_client()
 ```
 
 Run `az login` first. `openai` is required because chat goes through `get_openai_client()`.
+
+The Learn unit still passes a dated `api_version` here. The current [AIProjectClient](https://learn.microsoft.com/en-us/python/api/azure-ai-projects/azure.ai.projects.aiprojectclient?view=azure-python) builds the client on the project endpoint plus `/openai/v1/`, so leave it out.
 
 ## OpenAI SDK
 
@@ -59,6 +61,8 @@ openai_client = OpenAI(
 Use `AzureOpenAI` only for a specific API version. That endpoint has no `/openai/v1`, and you pass `api_version`.
 
 ## Non-Azure OpenAI model
+
+The model must support the Responses API. Check its model card. The chat lab code is in [04 Responses API](04-responses-api.md#lab-chat-app).
 
 ```python
 response = openai_client.responses.create(

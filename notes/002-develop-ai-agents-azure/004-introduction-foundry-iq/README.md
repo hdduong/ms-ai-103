@@ -9,3 +9,5 @@
 | 03 | [Explore Foundry IQ](https://learn.microsoft.com/en-us/training/modules/introduction-foundry-iq/3-foundry-iq?pivots=text) | [03-foundry-iq.md](03-foundry-iq.md) |
 | 04 | [Configure data sources for knowledge bases](https://learn.microsoft.com/en-us/training/modules/introduction-foundry-iq/4-data-requirements?pivots=text) | [04-data-requirements.md](04-data-requirements.md) |
 | 05 | [Configure retrieval with Foundry IQ](https://learn.microsoft.com/en-us/training/modules/introduction-foundry-iq/5-configure-retrieval?pivots=text) | [05-configure-retrieval.md](05-configure-retrieval.md) |
+
+The product-catalog example connects the concepts in order: [understand the MCP connection](03-foundry-iq.md#knowledge-base-as-an-mcp-tool), [configure the PDF source and Search connection](04-data-requirements.md#lab-blob-source-for-product-expert-agent), then [write instructions, handle approvals, and verify citations](05-configure-retrieval.md#lab-ask-then-approve-the-knowledge-base-call).

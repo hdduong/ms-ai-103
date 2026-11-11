@@ -2,65 +2,17 @@
 
 [Understanding RAG for agents](https://learn.microsoft.com/en-us/training/modules/introduction-foundry-iq/2-understand-rag?pivots=text)
 
-- A model with no retrieval misses new facts, private docs, your process, and it will invent an answer. Every team then rebuilds the same search stack.
+- A model cannot retrieve your private documents or recent updates from its trained weights. You can supply facts in a prompt; RAG automates finding the relevant facts for each question. Without relevant context, the model may invent an answer.
 - RAG is three steps: **retrieve** matching chunks, **augment** the prompt with those chunks, **generate** the reply from that context.
-- What you get: answers stay current without a new training run, the reply can name the source, and the answer is tied to your documents.
+- RAG can use updated documents without a new training run and return references for verification. Check that retrieval found the right content and that the reply actually follows it; retrieval alone does not guarantee correctness.
 - Foundry IQ is that stack as a shared service. The next unit is the product.
 
 In the exercise, `product-expert-agent` gets its retrieve step from `knowledgebase301` under **Knowledge**.
 
 ![product-expert-agent in the portal. Knowledge lists knowledgebase301. Web search is the only other tool.](images/02-agent-knowledge.png)
 
-The exercise client is the retrieve step. It sends the question to the agent that has the knowledge base, then answers `mcp_approval_request` until the reply has no pending tool call. Lab: [Integrate an AI agent with Foundry IQ](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/04-integrate-agent-with-foundry-iq.html).
+The lab's portal setup is in [04](04-data-requirements.md#lab-blob-source-for-product-expert-agent). Its Python client, which calls the agent and answers the knowledge-base approval requests, is in [05](05-configure-retrieval.md#lab-ask-then-approve-the-knowledge-base-call).
 
-```python
-from azure.ai.projects import AIProjectClient
-from azure.identity import DefaultAzureCredential
+## Follow a product question through RAG
 
-credential = DefaultAzureCredential(
-    exclude_environment_credential=True,
-    exclude_managed_identity_credential=True,
-)
-project_client = AIProjectClient(
-    credential=credential,
-    endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
-)
-openai_client = project_client.get_openai_client()
-agent = project_client.agents.get(agent_name="product-expert-agent")
-conversation = openai_client.conversations.create(items=[])
-
-user_message = "What tents does Contoso sell?"
-openai_client.conversations.items.create(
-    conversation_id=conversation.id,
-    items=[{"type": "message", "role": "user", "content": user_message}],
-)
-response = openai_client.responses.create(
-    conversation=conversation.id,
-    extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-    input="",
-)
-while True:
-    approval_requests = [
-        item for item in (getattr(response, "output", None) or [])
-        if getattr(item, "type", None) == "mcp_approval_request"
-    ]
-    if not approval_requests:
-        break
-    approval_items = []
-    for approval_request in approval_requests:
-        approval_items.append({
-            "type": "mcp_approval_response",
-            "approval_request_id": approval_request.id,
-            "approve": True,
-        })
-    openai_client.conversations.items.create(
-        conversation_id=conversation.id,
-        items=approval_items,
-    )
-    response = openai_client.responses.create(
-        conversation=conversation.id,
-        extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-        input="",
-    )
-print(response.output_text)
-```
+For `Which backpacks are available in XL?`, **retrieve** means searching the product PDFs, **augment** means returning the relevant catalog passages to the agent, and **generate** means writing an answer that cites those passages. The Python client in unit 05 requests an agent response; it does not implement an embedding pipeline or retrieve arbitrary files from Blob itself. Foundry IQ handles retrieval through the connected knowledge-base tool.
