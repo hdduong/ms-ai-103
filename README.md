@@ -9,6 +9,14 @@ Microsoft Learn paths, summarized by module and unit. Start at [notes/README.md]
 - [Develop generative AI apps in Azure](https://learn.microsoft.com/en-us/training/paths/develop-generative-ai-apps/)
 - [Develop AI agents on Azure](https://learn.microsoft.com/en-us/training/paths/develop-ai-agents-azure/)
 
+## cheat-sheet
+
+Third-party exam summaries. Not Microsoft material; where they differ from Microsoft Learn, Learn wins.
+
+| File | Source | What it is |
+| --- | --- | --- |
+| [AI-103-Developing-AI-Apps-and-Agents-on-Azure-Master-Cheat-Sheet.pdf](cheat-sheet/AI-103-Developing-AI-Apps-and-Agents-on-Azure-Master-Cheat-Sheet.pdf) | [SkillCertPro](https://skillcertpro.com/wp-content/uploads/2026/04/AI-103-Developing-AI-Apps-and-Agents-on-Azure-Master-Cheat-Sheet.pdf) | 74 pages by exam domain: plan and manage (p1), generative AI and agents (p15), computer vision (p38), text analysis (p55), information extraction (p67). The last three are the domains the Learn notes don't fully cover. |
+
 ## practice-test
 
 Third-party AI-103 practice material. These are not Microsoft exams and are not affiliated with Microsoft.
