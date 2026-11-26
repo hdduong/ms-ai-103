@@ -4,7 +4,7 @@
 
 | Sequence | Unit | Notes |
 | --- | --- | --- |
-| 01 | Introduction | |
+| 01 | [Introduction](https://learn.microsoft.com/en-us/training/modules/optimize-generative-ai-model-performance/1-introduction?pivots=text) | [01-introduction.md](01-introduction.md) |
 | 02 | [Optimize model output with prompt engineering](https://learn.microsoft.com/en-us/training/modules/optimize-generative-ai-model-performance/2-prompt-engineering?pivots=text) | [02-prompt-engineering.md](02-prompt-engineering.md) |
 | 03 | [Ground your model with Retrieval Augmented Generation](https://learn.microsoft.com/en-us/training/modules/optimize-generative-ai-model-performance/3-retrieval-augmented-generation?pivots=text) | [03-retrieval-augmented-generation.md](03-retrieval-augmented-generation.md) |
 | 04 | [Fine-tune a model for consistent behavior](https://learn.microsoft.com/en-us/training/modules/optimize-generative-ai-model-performance/4-fine-tune-model?pivots=text) | [04-fine-tune-model.md](04-fine-tune-model.md) |

@@ -4,7 +4,7 @@
 
 | Sequence | Unit | Notes |
 | --- | --- | --- |
-| 01 | Introduction | |
+| 01 | [Introduction](https://learn.microsoft.com/en-us/training/modules/get-started-web-iq/1-introduction?pivots=text) | [01-introduction.md](01-introduction.md) |
 | 02 | [Explore Web IQ](https://learn.microsoft.com/en-us/training/modules/get-started-web-iq/2-explore-web-iq) | [02-explore-web-iq.md](02-explore-web-iq.md) |
 | 03 | [Configure Web IQ](https://learn.microsoft.com/en-us/training/modules/get-started-web-iq/3-configure-web-iq) | [03-configure-web-iq.md](03-configure-web-iq.md) |
 | 04 | [Use Web IQ in Foundry](https://learn.microsoft.com/en-us/training/modules/get-started-web-iq/4-use-web-iq-foundry) | [04-use-web-iq-foundry.md](04-use-web-iq-foundry.md) |
