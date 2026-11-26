@@ -24,10 +24,13 @@ from openai import OpenAI
 
 
 def main():
+    # Read MODEL_DEPLOYMENT and AZURE_OPENAI_ENDPOINT from .env
     load_dotenv()
     deployment = os.environ["MODEL_DEPLOYMENT"]
+    # Sent as the system message on every request
     instructions = "You are a helpful AI assistant."
 
+    # Same Entra ID sign-in and client as the Responses program
     with DefaultAzureCredential() as credential:
         token_provider = get_bearer_token_provider(
             credential, "https://ai.azure.com/.default"
@@ -36,12 +39,14 @@ def main():
             base_url=os.environ["AZURE_OPENAI_ENDPOINT"],
             api_key=token_provider,
         ) as client:
+            # One question per pass until you type quit
             while True:
                 prompt = input("Enter a prompt (or 'quit' to exit): ").strip()
                 if prompt.lower() == "quit":
                     break
                 if not prompt:
                     continue
+                # Fresh list each turn: system rules and this question, no history
                 completion = client.chat.completions.create(
                     model=deployment,  # deployment name
                     messages=[
@@ -49,6 +54,7 @@ def main():
                         {"role": "user", "content": prompt},
                     ],
                 )
+                # The reply text is in the first choice's message
                 print(completion.choices[0].message.content)
 
 
@@ -56,7 +62,7 @@ if __name__ == "__main__":
     main()
 ```
 
-Each iteration constructs a fresh list containing only the system message and the current question. Ask about ELIZA, then ask a follow-up that refers to it. The second request sends no first-turn context, even though both answers appear in the same terminal.
+Ask about ELIZA, then ask a follow-up that refers to it. The second request sends no first-turn context, even though both answers appear in the same terminal.
 
 If editing the Responses file instead, replace the call **and both following lines**, including `last_response_id = response.id`; remove its initialization too. Leaving that assignment behind refers to a `response` variable that the Chat Completions version never creates.
 
@@ -65,6 +71,7 @@ If editing the Responses file instead, replace the call **and both following lin
 To make the program conversational, replace the entire `while True` loop above with this block, at the same indentation inside `with OpenAI(...) as client:`. The `messages` list is initialized **once, before the loop**:
 
 ```python
+# History lives in the app; create it once, before the loop
 messages = [{"role": "system", "content": instructions}]
 while True:
     prompt = input("Enter a prompt (or 'quit' to exit): ").strip()
@@ -72,17 +79,19 @@ while True:
         break
     if not prompt:
         continue
+    # Add this question to the history before sending
     messages.append({"role": "user", "content": prompt})
+    # Send the whole history so the model can resolve follow-ups
     completion = client.chat.completions.create(
         model=deployment,  # deployment name
-        messages=messages,
+        messages=messages,  # system, then every user/assistant turn so far
     )
+    # content can be None, so fall back to an empty string
     assistant_text = completion.choices[0].message.content or ""
     print(assistant_text)
+    # Keep the reply too, or the model can't refer to its own answer
     messages.append({"role": "assistant", "content": assistant_text})
 ```
-
-After the first reply, the list holds `system → user → assistant`. After the next question, it holds `system → user → assistant → user`, so the model receives the context needed to resolve a follow-up. Append the assistant reply as well as the user question; otherwise the model cannot refer to its own earlier answer.
 
 | Conversation choice | What the next request sends |
 | --- | --- |

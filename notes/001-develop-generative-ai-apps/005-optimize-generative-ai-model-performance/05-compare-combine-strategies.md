@@ -21,21 +21,22 @@
 The [travel application](../004-use-generative-ai-tools/05-file-search.md#lab-brochures-plus-web-search) already combines these choices. The following is its generation step, after `client` and `vector_store` have been created and the brochures have finished indexing. Reuse that setup; this snippet is not a separate program or another upload step.
 
 ```python
+# Prompt engineering and RAG together in one request
 response = client.responses.create(
     model=os.environ["MODEL_DEPLOYMENT"],  # deployment name
-    instructions=(
+    instructions=(  # prompt engineering: role and source rule
         "You are a travel assistant for Margie's Travel. Answer about its "
         "services from the brochures. Use the web for general destination advice."
     ),
     input="What hotels does Margie's Travel offer in San Francisco?",
-    tools=[
-        {"type": "file_search", "vector_store_ids": [vector_store.id]},
-        {"type": "web_search"},
+    tools=[  # RAG: facts retrieved at request time
+        {"type": "file_search", "vector_store_ids": [vector_store.id]},  # company facts
+        {"type": "web_search"},  # public information
     ],
 )
 print(response.output_text)
 ```
 
-`instructions` is prompt engineering: it defines the role and source-selection rule. `file_search` retrieves company facts; `web_search` retrieves public information. Neither tool changes model weights. If facts are wrong, inspect retrieval and source data before deciding to fine-tune.
+Neither tool changes model weights. If facts are wrong, inspect retrieval and source data before deciding to fine-tune.
 
 The [fine-tuning lesson](04-fine-tune-model.md#lab-fine-tune-gpt-5-in-the-portal) uses a **different** travel-assistant scenario: its dataset discourages hotel and restaurant recommendations. It teaches behavior adaptation, so do not attach that dataset to the brochure agent and expect it to preserve the brochure agent's goals. Evaluate a consistent scenario before combining all three techniques.

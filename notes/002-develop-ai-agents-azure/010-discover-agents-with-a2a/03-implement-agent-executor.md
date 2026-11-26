@@ -16,15 +16,18 @@ from azure.ai.agents import AgentsClient
 from azure.ai.agents.models import ListSortOrder, MessageRole
 from azure.identity import DefaultAzureCredential
 
+# Backend: plain Foundry calls, no A2A code here
 class TitleAgent:
     def __init__(self):
+        # Foundry project client; signs in as you via az login
         self.client = AgentsClient(
             endpoint=os.environ["PROJECT_ENDPOINT"],
             credential=DefaultAzureCredential(
-                exclude_environment_credential=True,
-                exclude_managed_identity_credential=True,
+                exclude_environment_credential=True,  # ignore service principal env vars
+                exclude_managed_identity_credential=True,  # no managed identity on a dev box
             ),
         )
+        # Create the Foundry agent once; every request reuses it
         self.agent = self.client.create_agent(
             model=os.environ["MODEL_DEPLOYMENT_NAME"],  # deployment name
             name="title-agent",
@@ -35,28 +38,35 @@ class TitleAgent:
         )
 
     async def run_conversation(self, user_message: str) -> list[str]:
+        # A new thread per request, so requests share no history
         thread = self.client.threads.create()
         try:
+            # Add the topic as the user's message
             self.client.messages.create(
                 thread_id=thread.id, role=MessageRole.USER, content=user_message,
             )
+            # Run the agent on the thread; blocks until the run finishes
             run = self.client.runs.create_and_process(
                 thread_id=thread.id, agent_id=self.agent.id,
             )
+            # Treat any run that didn't complete as an error
             if run.status != "completed":
                 raise RuntimeError(f"Title run ended with status {run.status}")
+            # Newest first, so the agent's reply comes before the topic
             messages = self.client.messages.list(
                 thread_id=thread.id, order=ListSortOrder.DESCENDING,
             )
+            # Return the text parts of the newest agent message
             for message in messages:
                 if message.role == MessageRole.AGENT and message.text_messages:
                     return [part.text.value for part in message.text_messages]
             raise RuntimeError("The completed run returned no title text")
         finally:
+            # Delete the temporary thread, even if the run failed
             self.client.threads.delete(thread.id)
 ```
 
-The constructor creates one backend agent for this server instance. Every request gets a new Azure thread, adds the user's topic, starts a run, and reads the latest assistant text. Consequently, these title requests are independent; an A2A context id does not automatically reuse an Azure thread. `finally` deletes the temporary thread after its result has been read, including when processing fails.
+Title requests are independent: an A2A context id does not automatically reuse an Azure thread.
 
 ## A2A task events
 
@@ -71,31 +81,39 @@ from a2a.utils import new_agent_text_message
 from a2a.utils.errors import ServerError
 from title_agent.agent import TitleAgent
 
+# A2A side: the server calls execute() for each incoming message
 class FoundryAgentExecutor(AgentExecutor):
     def __init__(self, card: AgentCard):
         self._card = card
         self._foundry_agent = None
 
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
+        # Helper that posts this task's status events to the queue
         updater = TaskUpdater(event_queue, context.task_id, context.context_id)
+        # Mark the task submitted, then working
         await updater.submit()
         await updater.start_work()
         try:
+            # Create the backend on first use, so startup makes no Azure calls
             if self._foundry_agent is None:
                 self._foundry_agent = TitleAgent()
+            # Progress update: still working, with a short status message
             await updater.update_status(
                 TaskState.working,
                 message=new_agent_text_message(
                     "Generating a title...", context_id=context.context_id,
                 ),
             )
+            # Send the message's text to the backend and wait for the title
             responses = await self._foundry_agent.run_conversation(context.get_user_input())
+            # Finish as completed, with the title as the final message
             await updater.complete(
                 message=new_agent_text_message(
                     responses[-1], context_id=context.context_id,
                 ),
             )
         except Exception:
+            # Any error ends the task as failed, with a generic message
             await updater.failed(
                 message=new_agent_text_message(
                     "The title agent could not complete the request.",
@@ -104,13 +122,15 @@ class FoundryAgentExecutor(AgentExecutor):
             )
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+        # Refuse with an A2A error; the Azure run can't be stopped here
         raise ServerError(error=TaskNotCancelableError())
 
+# Factory that server.py calls to build the executor
 def create_foundry_agent_executor(card: AgentCard) -> FoundryAgentExecutor:
     return FoundryAgentExecutor(card)
 ```
 
-`context.get_user_input()` extracts the incoming text. `TaskUpdater` uses the A2A task and context identifiers to emit submitted, working, and completed/failed states. On success the final task message contains the generated title; on error the caller receives a failed task.
+The task moves from submitted to working, then ends as completed or failed.
 
 This adaptation explicitly rejects cancellation because it cannot cancel an in-flight Azure operation. Emitting a failed task with a “cancelled” message, as the starter does, would not demonstrate that backend work stopped. An implementation that supports cancellation must track and stop that operation too.
 

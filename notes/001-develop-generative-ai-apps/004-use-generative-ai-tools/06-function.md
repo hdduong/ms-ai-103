@@ -12,9 +12,11 @@ The unit's time function as a loop. `openai_client` is from [Choose an endpoint 
 ```python
 from datetime import datetime, timezone
 
+# Runs in your app, not on the service; the model only requests it
 def get_time():
     return "The current UTC time is " + datetime.now(timezone.utc).isoformat()
 
+# Describes the call the model can request; it takes no arguments
 tools = [{
     "type": "function",
     "name": "get_time",
@@ -23,31 +25,41 @@ tools = [{
         "type": "object",
         "properties": {},
         "required": [],
-        "additionalProperties": False,
+        "additionalProperties": False,  # strict mode requires this
     },
-    "strict": True,
+    "strict": True,  # enforce the schema on the model's arguments
 }]
+# The conversation, kept by the app and sent in full each request
 messages = [{"role": "user", "content": "What is the current UTC time?"}]
 
 tool_rounds = 0
+# Repeat until the model answers instead of asking for a tool
 while True:
+    # Send the history; the reply is more calls or the final answer
     response = openai_client.responses.create(
         model="gpt-4.1",  # deployment name
         instructions="Use get_time for the current time and answer using its output.",
         input=messages,
         tools=tools,
     )
+    # Keep the function_call items; each result must follow its call
     messages.extend(response.output)
+    # Calls the model wants this app to run
     calls = [item for item in response.output if item.type == "function_call"]
+    # No calls: this response is the answer
     if not calls:
         print(response.output_text)
         break
+    # After five rounds, more calls raise rather than stop with no answer
     if tool_rounds >= 5:
         raise RuntimeError("The model requested more than five rounds of tool calls.")
     tool_rounds += 1
+    # Answer every call in this response before the next request
     for call in calls:
+        # Run only functions you defined; reject anything else
         if call.name != "get_time":
             raise ValueError("Unknown function: " + call.name)
+        # Add the result; the matching call_id ties it to the request
         messages.append({
             "type": "function_call_output",
             "call_id": call.call_id,
@@ -55,6 +67,4 @@ while True:
         })
 ```
 
-The schema describes the request the model can make; `get_time()` gets the actual time from the application clock. `messages.extend(response.output)` preserves the function-call item, and the matching `call_id` connects its result to the request. The next `responses.create` call lets the model turn that result into a user-facing answer.
-
-The counter allows five rounds of tool execution and still makes the final request that consumes the fifth round's results. If the model asks for a sixth round, the program reports the limit instead of silently stopping without an answer. Unlike the hosted web/file tools in the [travel application](05-file-search.md#lab-brochures-plus-web-search), a custom function runs in your application process.
+Unlike the hosted web/file tools in the [travel application](05-file-search.md#lab-brochures-plus-web-search), a custom function runs in your application process.

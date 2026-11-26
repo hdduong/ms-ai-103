@@ -8,11 +8,13 @@
 - In instructions, many models look for the name **python tool**.
 
 ```python
+# The model can write Python, run it in a sandbox, and use the result
 response = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     instructions="You are an AI assistant. Use the python tool to run code for math problems.",
     input="What is the square root of 16?",
     tools=[
+        # auto: the service creates the sandbox container for you
         {"type": "code_interpreter", "container": {"type": "auto"}},
     ],
 )

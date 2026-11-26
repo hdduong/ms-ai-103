@@ -14,10 +14,13 @@ The multi-agent lab uses sequential: summarize, classify, then recommend an acti
 from agent_framework.orchestrations import SequentialBuilder
 
 async def run_feedback(summarizer_agent, classifier_agent, action_agent, feedback):
+    # Fixed pipeline: summarize, then classify, then suggest an action
     workflow = SequentialBuilder(
         participants=[summarizer_agent, classifier_agent, action_agent],
-        output_from="all",
+        output_from="all",  # keep every agent's message, not just the last
     ).build()
+    # Each agent sees the feedback plus the earlier agents' replies
     result = await workflow.run(f"Customer feedback: {feedback}")
+    # One AgentResponse per agent, in pipeline order
     print(result.get_outputs())
 ```

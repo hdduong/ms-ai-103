@@ -25,9 +25,13 @@ With the [packages in unit 03](03-create-azure-ai-agent.md#one-run), this local 
 ```python
 from agent_framework import AgentSession
 
+# A new, empty session; session_id is generated for you
 session = AgentSession()
+# A plain dict with the session ids and state, ready to store
 saved_state = session.to_dict()
+# Rebuild the session from saved data, as after a restart
 restored_session = AgentSession.from_dict(saved_state)
+# The round trip kept the session's identity
 assert restored_session.session_id == session.session_id
 ```
 

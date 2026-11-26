@@ -13,16 +13,21 @@ An agent needs a model connection and instructions before it can do useful work.
 Create a working folder, use Python **3.13** as in the official exercise, and install its [package versions](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/07-agent-framework/python/requirements.txt):
 
 ```bash
+# Create a virtual environment and activate it
 python -m venv .venv
 source .venv/bin/activate
+# Install the exercise's pinned packages
 python -m pip install python-dotenv azure-identity==1.25.3 "pydantic>=2,<3" agent-framework-core==1.12.1 agent-framework-foundry==1.10.3
+# Sign in so AzureCliCredential can use your account
 az login
 ```
 
 On PowerShell, activate with `.\.venv\Scripts\Activate.ps1`. Create a Foundry project and deploy a tool-capable model such as the exercise's `gpt-5`. Save its values in `.env` beside the program:
 
 ```dotenv
+# Project endpoint from the Foundry project home page
 PROJECT_ENDPOINT=https://<resource-name>.services.ai.azure.com/api/projects/<project-name>
+# Name of your model deployment, not the catalog model name
 MODEL_DEPLOYMENT_NAME=gpt-5
 ```
 
@@ -37,19 +42,25 @@ from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 
 async def main():
+    # Read PROJECT_ENDPOINT and MODEL_DEPLOYMENT_NAME from .env
     load_dotenv()
+    # Get tokens for the account selected by az login
     with AzureCliCredential() as credential:
+        # Chat client for your model deployment, via the Foundry project
         client = FoundryChatClient(
             project_endpoint=os.environ["PROJECT_ENDPOINT"],
             model=os.environ["MODEL_DEPLOYMENT_NAME"],  # deployment name
             credential=credential,
         )
+        # Client plus instructions, no tools yet; async with cleans up after
         async with Agent(
             client=client,
             name="ExpenseClaimAgent",
             instructions="Draft an expense claim email from the supplied expenses. Do not claim to send it.",
         ) as agent:
+            # One request; await returns the model's complete reply
             response = await agent.run("Draft a claim for taxi 42 and lunch 18.")
+            # Just the reply text, not the whole response object
             print(response.text)
 
 if __name__ == "__main__":
@@ -59,8 +70,6 @@ if __name__ == "__main__":
 ```bash
 python agent-framework.py
 ```
-
-`FoundryChatClient` supplies authentication, project, and model configuration. `Agent` supplies the task instructions. `await agent.run(...)` waits for the model's completed response; `response.text` extracts the text to display. Context managers release local client resources when the run finishes.
 
 Check that the draft lists both expenses and totals **60**. Wording can vary. At this point the application only prints the model response; [unit 04](04-add-plugins-to-agent.md#lab-expense-claim-agent) connects the model to a Python function and real input data.
 

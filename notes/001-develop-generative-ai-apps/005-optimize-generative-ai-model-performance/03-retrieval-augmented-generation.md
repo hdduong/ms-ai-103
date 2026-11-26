@@ -17,13 +17,16 @@ In [the file-search application](../004-use-generative-ai-tools/05-file-search.m
 The following snippet exposes the **generation** step for a custom retrieval pipeline. `openai_client` comes from [the endpoint lesson](../003-foundry-sdk/03-choose-an-endpoint-and-sdk.md); `retrieved_context` must be the text your retrieval step already returned. It is a continuation, not a complete search program.
 
 ```python
+# Generate an answer from text your retrieval step already found
 response = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     input=[
+        # Augment: put the retrieved text in the system message
         {
             "role": "system",
             "content": "You are a helpful travel advisor. Use the following hotel data to answer: " + retrieved_context,
         },
+        # The user's question, to be answered from that data
         {"role": "user", "content": "Which hotels do you offer in Paris?"},
     ],
 )

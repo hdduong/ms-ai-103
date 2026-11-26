@@ -19,7 +19,7 @@ The Learn pages and the current SDK (`agent-framework-core` 1.12, `agent-framewo
 
 | Learn page | Current SDK |
 | --- | --- |
-| `WorkflowOutputEvent`, `RequestInfoEvent`, and the other event classes | One `WorkflowEvent`. Check `event.type`: `started`, `output`, `error`, `executor_invoked`, `executor_completed`, `request_info` |
+| `WorkflowOutputEvent`, `RequestInfoEvent`, and the other event classes | One `WorkflowEvent`. Check `event.type`: `started`, `status`, `output`, `error` (non-fatal), `failed` (run ended), `executor_invoked`, `executor_completed`, `request_info` |
 | `chat_client.create_agent(...)` | `chat_client.as_agent(...)` or `Agent(client=...)` |
 | `workflow.run_stream(...)` | `workflow.run(..., stream=True)` |
 | Group chat "runs agents in parallel" | A manager picks one speaker per turn |
@@ -28,8 +28,11 @@ The [lab](05-use-sequential-orchestration.md#lab-feedback-pipeline) prints every
 
 ```python
 async def print_feedback_outputs(workflow, feedback):
+    # Run the whole workflow and wait for it to finish
     result = await workflow.run(f"Customer feedback: {feedback}")
+    # With output_from="all", one response per agent
     for response in result.get_outputs():
+        # Label each message with the agent that wrote it
         for message in response.messages:
             print(message.author_name, message.text)
 ```
@@ -41,11 +44,14 @@ For streaming with the pinned packages, replace the run-and-print step with this
 
 ```python
 async def observe_workflow(workflow, feedback):
+    # stream=True yields events as they happen, not one final result
     async for event in workflow.run(f"Customer feedback: {feedback}", stream=True):
+        # event.type names the event; event.data carries its payload
         if event.type == "output":
             print(event.data)
+        # Non-fatal errors only; a failed run raises out of the loop
         elif event.type == "error":
             print("Workflow error:", event.data)
 ```
 
-`event.type` identifies the event, while `event.data` carries its payload. Importing the older `WorkflowOutputEvent` class into this package generation is not required.
+Importing the older `WorkflowOutputEvent` class into this package generation is not required.

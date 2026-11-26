@@ -16,6 +16,7 @@
 ## Foundry SDK
 
 ```bash
+# Install the Foundry SDK, Entra ID auth, and the OpenAI library
 pip install azure-ai-projects azure-identity openai
 ```
 
@@ -23,11 +24,14 @@ pip install azure-ai-projects azure-identity openai
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 
+# Project endpoint from the project home page, not the OpenAI one
 project_endpoint = "https://{resource-name}.services.ai.azure.com/api/projects/<project-name>"
+# Foundry SDK client for the project, signed in with Entra ID
 project_client = AIProjectClient(
-    credential=DefaultAzureCredential(),
+    credential=DefaultAzureCredential(),  # locally picks up your az login
     endpoint=project_endpoint,
 )
+# OpenAI-compatible client for this project, already authenticated
 openai_client = project_client.get_openai_client()
 ```
 
@@ -38,6 +42,7 @@ The Learn unit still passes a dated `api_version` here. The current [AIProjectCl
 ## OpenAI SDK
 
 ```bash
+# Install the OpenAI SDK and Entra ID auth
 pip install openai azure-identity
 ```
 
@@ -45,14 +50,17 @@ pip install openai azure-identity
 from openai import OpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
+# Entra ID token function; the SDK calls it before each request
 token_provider = get_bearer_token_provider(
     DefaultAzureCredential(),
-    "https://ai.azure.com/.default",
+    "https://ai.azure.com/.default",  # token scope for Foundry and Azure OpenAI
 )
+# Azure OpenAI endpoint from the project home page; ends in /openai/v1/
 openai_endpoint = "https://{resource-name}.openai.azure.com/openai/v1/"
+# The plain OpenAI client, pointed at your Azure resource
 openai_client = OpenAI(
     base_url=openai_endpoint,
-    api_key=token_provider,
+    api_key=token_provider,  # token function in place of a key string
 )
 ```
 
@@ -65,6 +73,7 @@ Use `AzureOpenAI` only for a specific API version. That endpoint has no `/openai
 The model must support the Responses API. Check its model card. The chat lab code is in [04 Responses API](04-responses-api.md#lab-chat-app).
 
 ```python
+# Same call as for GPT; only the deployment name changes
 response = openai_client.responses.create(
     model="DeepSeek-R1-0528",  # deployment name
     input="What are the top 3 benefits of cloud computing? Be concise.",

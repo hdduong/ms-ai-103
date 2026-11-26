@@ -13,15 +13,19 @@ Use the `ContosoPay-Customer-Support-Triage` workflow built across [units 04–0
 In a Python **3.13** working folder, create an environment and install the [exercise dependencies](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/06-build-workflow-ms-foundry/Python/requirements.txt):
 
 ```bash
+# Create and activate a virtual environment (macOS/Linux)
 python -m venv .venv
 source .venv/bin/activate
+# Install the exercise packages
 python -m pip install python-dotenv azure-identity "azure-ai-projects==2.3.0" aiohttp "openai<3"
+# Sign in so DefaultAzureCredential can use your account
 az login
 ```
 
 On PowerShell, activate with `.\.venv\Scripts\Activate.ps1`. The exercise caps `openai` below 3 for compatibility with this Azure AI Projects version. Create `.env` beside the program:
 
 ```dotenv
+# Project endpoint from the workflow's Code > .env variables panel
 PROJECT_ENDPOINT=https://<resource-name>.services.ai.azure.com/api/projects/<project-name>
 ```
 
@@ -38,7 +42,9 @@ from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
 
 def main():
+    # Read PROJECT_ENDPOINT from .env
     load_dotenv()
+    # Sign in with az login, open the project, get the OpenAI-style client
     with (
         DefaultAzureCredential() as credential,
         AIProjectClient(
@@ -47,26 +53,32 @@ def main():
         ) as project_client,
         project_client.get_openai_client() as openai_client,
     ):
+        # A conversation holds this run's messages and workflow state
         conversation = openai_client.conversations.create()
         try:
+            # Start the saved workflow by name and stream its events
             stream = openai_client.responses.create(
                 conversation=conversation.id,
                 extra_body={
                     "agent_reference": {
-                        "name": "ContosoPay-Customer-Support-Triage",
+                        "name": "ContosoPay-Customer-Support-Triage",  # name only; no version pinned
                         "type": "agent_reference",
                     }
                 },
-                input="Start",
+                input="Start",  # trigger only; tickets are in Local.SupportTickets
                 stream=True,
             )
+            # Read events as the workflow runs; only completed or failed matter
             for event in stream:
                 if event.type == "response.completed":
+                    # Fetch the finished response and print its text
                     response = openai_client.responses.retrieve(event.response.id)
                     print(response.output_text)
                 elif event.type == "response.failed":
+                    # A failed run becomes an exception, not silent empty output
                     raise RuntimeError(f"Workflow response failed: {event.response.error}")
         finally:
+            # Delete this one-shot run's conversation, even on errors
             openai_client.conversations.delete(conversation_id=conversation.id)
 
 if __name__ == "__main__":

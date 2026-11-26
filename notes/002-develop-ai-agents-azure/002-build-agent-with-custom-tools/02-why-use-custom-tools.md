@@ -19,15 +19,18 @@ The functions below complete the exercise's `functions.py`. [Unit 03](03-custom-
 Use Python 3.13, the version specified by the exercise. Clone the source once; if you already have this checkout, open the indicated directory instead. The pinned [starter and data files](https://github.com/MicrosoftLearning/mslearn-ai-agents/tree/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/02-agent-custom-tools/Python) match these examples.
 
 ```bash
+# Get the lab files (skip if you already cloned them)
 git clone https://github.com/MicrosoftLearning/mslearn-ai-agents.git
 cd mslearn-ai-agents
+# Pin the commit whose files match these examples
 git checkout 4d6a32629722927bd5f1034e0b5396e0da4e962c
+# Starter code and data files for this lab
 cd Labfiles/02-agent-custom-tools/Python
 ```
 
 ## Read the data and find an event
 
-Replace `functions.py` with the following block, then append the next two blocks to that same file. `BASE` makes data paths relative to the file, so the functions do not depend on the terminal's current directory.
+Replace `functions.py` with the following block, then append the next two blocks to that same file.
 
 ```python
 import json
@@ -37,10 +40,12 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
+# This file's folder, so data paths work from any directory
 BASE = Path(__file__).resolve().parent
 
 
 def load_rates(filename):
+    # Each line is name|value, e.g. premium|300.00
     rates = {}
     for line in (BASE / "data" / filename).read_text().splitlines():
         key, value = line.split("|")
@@ -48,31 +53,38 @@ def load_rates(filename):
     return rates
 
 
+# Read once at import: hourly rate per tier, multiplier per priority
 TELESCOPE_RATES = load_rates("telescope_rates.txt")
 PRIORITY_MULTIPLIERS = load_rates("priority_multipliers.txt")
 
 
 def next_visible_event(location: str) -> str:
+    # Today as MMDD (Nov 25 is 1125) so dates compare as numbers
     today = int(datetime.now().strftime("%m%d"))
+    # "South America" becomes south_america, the form the data uses
     normalized = location.strip().lower().replace(" ", "_")
     candidates = []
+    # Each line: name|type|MM-DD|continent;continent
     for line in (BASE / "data/events.txt").read_text().splitlines():
         name, event_type, date, locations = line.split("|")
         month, day = map(int, date.split("-"))
         visible_from = locations.split(";")
+        # Keep events visible from here, dated today or later
         if normalized in visible_from and month * 100 + day >= today:
             candidates.append((month * 100 + day, {
                 "event": name, "type": event_type, "date": date,
                 "visible_from": sorted(visible_from),
             }))
+    # Return the soonest match as JSON text for the model
     if candidates:
         return json.dumps(min(candidates, key=lambda item: item[0])[1])
+    # No match is a normal answer, not an error
     return json.dumps({"message": f"No remaining sample event for {location}."})
 
 
 ```
 
-The model supplies a continent such as `south_america`. Python normalizes that value, finds matching events on or after today's month and day, and returns the earliest match as JSON. These are illustrative events with no year, not a live astronomy feed; no match late in the year is a valid result.
+The model supplies a continent such as `south_america`. These are illustrative events with no year, not a live astronomy feed; no match late in the year is a valid result.
 
 ## Calculate instead of guessing
 
@@ -81,18 +93,23 @@ Append this function to `functions.py`:
 ```python
 def calculate_observation_cost(telescope_tier: str, hours: float,
                                priority: str) -> str:
+    # Ignore case and stray spaces in what the model sends
     tier = telescope_tier.strip().lower()
     priority = priority.strip().lower()
+    # Validate even with a schema; a JSON error lets the agent ask again
     if tier not in TELESCOPE_RATES:
         return json.dumps({"error": "Unknown telescope tier."})
     if priority not in PRIORITY_MULTIPLIERS:
         return json.dumps({"error": "Unknown priority."})
+    # Positive finite number only; bool counts as int, so reject it first
     if (isinstance(hours, bool) or not isinstance(hours, (int, float))
             or not math.isfinite(hours) or hours <= 0):
         return json.dumps({"error": "Hours must be a positive finite number."})
+    # Cost = hourly rate * hours * priority multiplier
     rate = TELESCOPE_RATES[tier]
     multiplier = PRIORITY_MULTIPLIERS[priority]
     base = rate * hours
+    # Return each input and step so the model can explain the total
     return json.dumps({
         "telescope_tier": tier, "hours": hours, "hourly_rate": rate,
         "priority": priority, "priority_multiplier": multiplier,
@@ -102,7 +119,7 @@ def calculate_observation_cost(telescope_tier: str, hours: float,
 
 ```
 
-The calculation is `hourly rate × hours × priority multiplier`. For the sample premium rate of $300 and normal multiplier of 1.25, five hours costs **$1,875**. Changing only the priority to high (1.75) gives **$2,625**. Python checks the inputs even though the model will also receive a schema: the schema describes acceptable arguments, while the function protects its own calculation. Expected validation failures return an error in JSON so the agent can ask for a correction.
+For the sample premium rate of $300 and normal multiplier of 1.25, five hours costs **$1,875**. Changing only the priority to high (1.75) gives **$2,625**.
 
 ## Return an artifact from an action
 
@@ -112,14 +129,20 @@ Append the final function to `functions.py`:
 def generate_observation_report(event_name: str, location: str,
                                 telescope_tier: str, hours: float,
                                 priority: str, observer_name: str) -> str:
+    # Reuse the cost function; pass its error back if inputs are bad
     cost = json.loads(calculate_observation_cost(telescope_tier, hours, priority))
     if "error" in cost:
         return json.dumps(cost)
+    # Add the next sample event for this location to the report
     next_event = json.loads(next_visible_event(location))
+    # Reports go in a reports/ folder beside this file
     reports = BASE / "reports"
     reports.mkdir(exist_ok=True)
+    # event_name comes from the model; keep only safe filename characters
     safe_name = re.sub(r"[^a-z0-9_-]+", "_", event_name.lower()).strip("_")[:60]
+    # Unique suffix so a new report doesn't overwrite an old one
     target = reports / f"report_{safe_name or 'observation'}_{uuid4().hex[:8]}.txt"
+    # Plain-text report from the results; no booking or payment happens
     text = (
         "CONTOSO OBSERVATORIES — SAMPLE OBSERVATION REPORT\n"
         f"Created: {datetime.now().isoformat(timespec='minutes')}\n"
@@ -133,16 +156,18 @@ def generate_observation_report(event_name: str, location: str,
         "No reservation or payment has been made.\n"
     )
     target.write_text(text, encoding="utf-8")
+    # Return what actually happened: the path of the file written
     return json.dumps({"status": "Report generated", "file": str(target)})
 ```
 
-A report is an action with a visible result: a file path in the returned JSON. This adaptation keeps filenames inside `reports/`, sanitizes the model-supplied event name, and adds a unique suffix. It does not make a telescope reservation or a payment. The same pattern applies to a support ticket or database update: return the operation's actual result, rather than asking the model to claim that it succeeded.
+A report is an action with a visible result: a file path in the returned JSON. It does not make a telescope reservation or a payment. The same pattern applies to a support ticket or database update: return the operation's actual result, rather than asking the model to claim that it succeeded.
 
 You can check the calculation locally before connecting any model:
 
 ```python
 from functions import calculate_observation_cost
 
+# Premium, 5 hours, normal priority: 300 * 5 * 1.25 = 1875
 print(calculate_observation_cost("premium", 5, "normal"))
 ```
 

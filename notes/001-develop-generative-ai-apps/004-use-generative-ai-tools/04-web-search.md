@@ -10,12 +10,13 @@
 - The same prompt can return a different answer later. Some regions or policies block web access. Search adds latency and tokens.
 
 ```python
+# A question about this week needs fresh facts from the web
 response = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     instructions="You are an AI assistant. Use web search when current information is required.",
     input="What are three major announcements from Microsoft Build this week?",
     tools=[
-        {"type": "web_search"},
+        {"type": "web_search"},  # permits a search; the model decides
     ],
 )
 print(response.output_text)

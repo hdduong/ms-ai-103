@@ -22,18 +22,20 @@ name: research-assistant
 description: Analyzes data and checks the live web
 model:
   id: gpt-4.1 # deployment name
+# Tell the model when to use each tool
 instructions: |
   Use Code Interpreter for math.
   Use Bing for anything that changes.
   Use File Search for the uploaded docs.
+# Hosted tools: Foundry runs them, so no tool loop in your code
 tools:
-  - type: code_interpreter
-  - type: bing_grounding
+  - type: code_interpreter  # sandboxed Python for math and charts
+  - type: bing_grounding  # live web search, with citations
     bing_grounding:
-      connection_id: your-connection-id
-  - type: file_search
+      connection_id: your-connection-id  # project connection to your Bing resource
+  - type: file_search  # search over your uploaded files
     file_search:
-      vector_store_ids:
+      vector_store_ids:  # vector stores that index those files
         - vectorstore-123
 ```
 

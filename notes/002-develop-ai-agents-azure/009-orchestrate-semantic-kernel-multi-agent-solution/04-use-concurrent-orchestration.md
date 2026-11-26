@@ -23,19 +23,26 @@ from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 
 async def main():
+    # Read the AZURE_AI_* endpoint and deployment name from .env
     load_dotenv()
+    # One chat client for the deployment, shared by all three agents
     client = FoundryChatClient(
         project_endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
         model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],  # deployment name
         credential=AzureCliCredential(),
     )
+    # Three reviewers; each one's instructions keep it to one concern
     security = Agent(client=client, name="security", instructions="Review the design for security risks only.")
     cost = Agent(client=client, name="cost", instructions="Review the design for cost only.")
     reliability = Agent(client=client, name="reliability", instructions="Review the design for reliability only.")
+    # Fan the input out to all three, then collect their replies
     workflow = ConcurrentBuilder(participants=[security, cost, reliability]).build()
+    # The same design text goes to every reviewer in parallel
     result = await workflow.run("A web app calls one gpt-4.1 deployment in one region with an API key.")
+    # Default aggregator: one AgentResponse with each agent's final reply
     for output in result.get_outputs():
         if isinstance(output, AgentResponse):
+            # author_name says which reviewer wrote each message
             for message in output.messages:
                 print(message.author_name, message.text)
 
@@ -44,6 +51,6 @@ if __name__ == "__main__":
 ```
 
 
-Save the program as `concurrent_review.py` and run it with the shared environment. The same design text reaches `security`, `cost`, and `reliability`; each instruction set constrains one review. The builder waits for the branches and exposes their results, while the author labels keep those results distinguishable.
+Save the program as `concurrent_review.py` and run it with the shared environment.
 
 Check that all three perspectives appear. Their completion order and wording may vary. No participant sees another participant's response in this pattern, so the program does not resolve disagreements between reviewers; a later aggregation step would do that.
