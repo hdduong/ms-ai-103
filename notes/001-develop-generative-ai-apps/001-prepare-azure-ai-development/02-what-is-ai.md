@@ -16,10 +16,12 @@
 The module exercise deploys a model and tests it in the playground. The same call from the Foundry SDK lab is:
 
 ```python
+# Ask the deployed model once; instructions acts as the system prompt
 response = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     instructions="You are an AI assistant that can provide information and advice about AI software development.",
     input="Describe three key considerations for working with large language models.",
 )
+# output_text joins all text parts of the reply into one string
 print(response.output_text)
 ```

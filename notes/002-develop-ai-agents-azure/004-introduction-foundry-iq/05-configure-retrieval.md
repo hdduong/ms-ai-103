@@ -34,24 +34,29 @@ From the [Foundry IQ lab](https://microsoftlearning.github.io/mslearn-ai-agents/
 Use Python 3.13 as specified by the exercise, and create a working directory for the client:
 
 ```bash
+# Create a virtual environment for the lab
 python -m venv .venv
 # macOS/Linux
 source .venv/bin/activate
 # Windows PowerShell instead: .venv\Scripts\Activate.ps1
+# Install the lab packages
 python -m pip install "azure-ai-projects==2.3.0" "openai<3" azure-identity python-dotenv
+# Sign in so DefaultAzureCredential can use your account
 az login
 ```
 
 `.env`:
 
 ```dotenv
+# Project endpoint from the Foundry project home page
 PROJECT_ENDPOINT=https://{resource-name}.services.ai.azure.com/api/projects/<project-name>
+# Name of the agent you set up in the portal
 AGENT_NAME=product-expert-agent
 ```
 
 ### Resume the agent after a decision
 
-Save the next two Python blocks together as `agent_client.py`. The first block implements one question and its possible approval rounds. It adds the user message, asks the saved agent to respond, then appends approval decisions to the same conversation.
+Save the next two Python blocks together as `agent_client.py`. The first block implements one question and its possible approval rounds.
 
 ```python
 import os
@@ -61,37 +66,47 @@ from dotenv import load_dotenv
 
 
 def answer_question(client, conversation_id, reference, question):
+    # Add the question to the conversation as a user message
     client.conversations.items.create(
         conversation_id=conversation_id,
         items=[{"type": "message", "role": "user", "content": question}],
     )
+    # Keep answering approval requests until the final answer comes back
     for round_number in range(9):
+        # Run the agent; input stays empty, the conversation already has it
         response = client.responses.create(
             conversation=conversation_id, extra_body=reference, input="",
         )
+        # The run failed on the service side
         if response.status == "failed":
             raise RuntimeError(str(response.error))
+        # Knowledge-base lookups the agent wants to make, waiting for a yes/no
         requests = [item for item in response.output if item.type == "mcp_approval_request"]
+        # Nothing waiting: this response is the answer
         if not requests:
             return response.output_text
+        # Safety stop so a chatty agent can't loop forever
         if round_number == 8:
             raise RuntimeError("Stopped after eight knowledge-base approval rounds.")
         decisions = []
         for request in requests:
+            # Show which tool it wants to call, and with what arguments
             print(f"Server: {request.server_label}  Tool: {request.name}")
             print("Arguments:", request.arguments)
+            # Each decision points back at its request by id
             decisions.append({
                 "type": "mcp_approval_response",
                 "approval_request_id": request.id,
-                "approve": input("Approve? [y/N] ").strip().lower() == "y",
+                "approve": input("Approve? [y/N] ").strip().lower() == "y",  # yes only if you type y
             })
+        # Add the decisions to the conversation; the next round resumes
         client.conversations.items.create(
             conversation_id=conversation_id, items=decisions,
         )
     raise RuntimeError("Stopped after eight knowledge-base approval rounds.")
 ```
 
-The empty `input` is deliberate: this pattern already put the question or decision into the conversation. `approval_request_id` connects the decision to the pending lookup. The next response either requests another lookup or returns the final answer. The exercise approves automatically; the prompt above is an adaptation that lets you inspect and deny the requested operation.
+The exercise approves automatically; the prompt above is an adaptation that lets you inspect and deny the requested operation.
 
 ### Connect the client to the saved portal agent
 
@@ -99,27 +114,35 @@ Append this block to `agent_client.py`:
 
 ```python
 def main():
+    # Read PROJECT_ENDPOINT and AGENT_NAME from .env
     load_dotenv()
+    # Sign in with az login, open the project, get the OpenAI-style client
     with (
         DefaultAzureCredential(
-            exclude_environment_credential=True,
-            exclude_managed_identity_credential=True,
+            exclude_environment_credential=True,  # env-var credentials can't replace az login
+            exclude_managed_identity_credential=True,  # nor can a managed identity
         ) as credential,
         AIProjectClient(endpoint=os.environ["PROJECT_ENDPOINT"],
                         credential=credential) as project,
         project.get_openai_client() as client,
     ):
+        # Load the saved portal agent by name; nothing is created here
         agent = project.agents.get(agent_name=os.environ["AGENT_NAME"])
+        # Run the saved agent by name, without pinning a version
         reference = {"agent_reference": {"name": agent.name, "type": "agent_reference"}}
+        # One conversation keeps context across the whole chat
         conversation = client.conversations.create(items=[])
         try:
+            # Chat loop: one question at a time until you type exit
             while True:
                 question = input("You (exit to stop): ").strip()
                 if question.lower() in {"exit", "quit"}:
                     break
                 if question:
+                    # Ask, handle any approval rounds, print the final answer
                     print("Agent:", answer_question(client, conversation.id, reference, question))
         finally:
+            # Delete this run's conversation; the portal agent stays
             client.conversations.delete(conversation_id=conversation.id)
 
 
@@ -127,7 +150,7 @@ if __name__ == "__main__":
     main()
 ```
 
-The credential exclusions follow the exercise's local developer setup so environment or managed-identity credentials do not override the signed-in developer. The client authenticates to Foundry; Search authentication remains in the project connection configured in [unit 04](04-data-requirements.md#lab-blob-source-for-product-expert-agent). Closing the program deletes its conversation and closes the clients, while keeping the portal-created agent for further study.
+The client authenticates to Foundry; Search authentication remains in the project connection configured in [unit 04](04-data-requirements.md#lab-blob-source-for-product-expert-agent).
 
 ```bash
 python agent_client.py

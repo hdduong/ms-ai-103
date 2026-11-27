@@ -15,13 +15,17 @@ In `routing_agent/agent.py`, replace the **entire `RoutingAgent.send_message` me
 ```python
 async def send_message(self, agent_name: str, task: str):
     """Send a task to a previously discovered remote agent."""
+    # agent_name comes from the model; accept only discovered agents
     if agent_name not in self.remote_agent_connections:
         raise ValueError(f"Agent {agent_name} not found")
+    # Connection created for this agent's card during discovery
     client = self.remote_agent_connections[agent_name]
     if client is None:
         raise ValueError(f"Client not available for {agent_name}")
 
+    # Every A2A message needs a unique messageId
     message_id = str(uuid.uuid4())
+    # A2A message: the task as one text part, sent with the user role
     payload: dict[str, Any] = {
         "message": {
             "role": "user",
@@ -29,24 +33,22 @@ async def send_message(self, agent_name: str, task: str):
             "messageId": message_id,
         },
     }
+    # Wrap it in a JSON-RPC message/send request; validates the dict
     message_request = SendMessageRequest(
         id=message_id,
         params=MessageSendParams.model_validate(payload),
     )
+    # POST to the remote agent over HTTP and wait for the reply
     send_response = await client.send_message(message_request=message_request)
+    # The reply is a JSON-RPC success or error; fail on errors
     if not isinstance(send_response.root, SendMessageSuccessResponse):
         raise RuntimeError("Remote agent returned an A2A error response")
+    # A result can be a Task or a direct Message; this lab expects a Task
     if not isinstance(send_response.root.result, Task):
         raise RuntimeError("This lab router expects an A2A Task result")
+    # Return the Task; the starter submits it as the tool output
     return send_response.root.result
 ```
-
-The code follows four protocol steps:
-
-1. Look up the connection found during discovery. A model-provided name cannot select an undiscovered endpoint.
-2. Put the task text in a message part, and assign a unique message id.
-3. Wrap that message in `SendMessageRequest` and **await** the remote call.
-4. Validate the response envelope before returning its task to the router.
 
 The `Task` check matches the two executors used here. A general-purpose A2A client must also handle direct `Message` results. A2A task/context ids remain distinct from the Azure thread/run ids used by each backend.
 
@@ -63,6 +65,7 @@ The file also ends with an unused `_get_initialized_routing_agent_sync` helper a
 After completing the [file map in unit 02](02-define-a2a-agent.md#lab-setup), remain in the starter's `Labfiles/09-build-remote-agents-with-a2a/python` directory and run:
 
 ```bash
+# Start the three servers (waiting on each /health), then the client
 python run_all.py
 ```
 

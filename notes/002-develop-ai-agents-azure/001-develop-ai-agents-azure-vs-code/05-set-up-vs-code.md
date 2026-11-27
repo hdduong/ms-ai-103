@@ -16,18 +16,23 @@
 The [exercise](https://microsoftlearning.github.io/mslearn-ai-agents/Instructions/Exercises/01-build-agent-portal-and-vscode.html) calls the portal-created agent from a local program. Use Python 3.13, the version specified by the exercise. Open a working folder in VS Code, then create a virtual environment:
 
 ```bash
+# Create a virtual environment in .venv
 python -m venv .venv
 # macOS/Linux
 source .venv/bin/activate
 # Windows PowerShell instead: .venv\Scripts\Activate.ps1
+# Install the lab packages
 python -m pip install "azure-ai-projects==2.3.0" "openai<3" azure-identity python-dotenv requests
+# Sign in so DefaultAzureCredential can use your account
 az login
 ```
 
-Create `.env` in that folder. Copy the project endpoint from Foundry rather than the individual model endpoint, and use the exact saved agent name:
+Create `.env` in that folder:
 
 ```dotenv
+# Project endpoint from the project home page, not a model endpoint
 PROJECT_ENDPOINT=https://{resource-name}.services.ai.azure.com/api/projects/<project-name>
+# Exact name of the agent you saved in the portal
 AGENT_NAME=it-support-agent
 ```
 

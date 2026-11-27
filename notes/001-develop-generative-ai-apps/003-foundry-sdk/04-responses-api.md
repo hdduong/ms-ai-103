@@ -19,14 +19,16 @@
 These short examples use `openai_client` from [Choose an endpoint and SDK](03-choose-an-endpoint-and-sdk.md). The complete chat program below creates its own client.
 
 ```python
+# One request: instructions is the system prompt, input the user prompt
 response = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     instructions="You are a helpful AI assistant that answers questions clearly and concisely.",
     input="Explain neural networks.",
-    temperature=0.8,
-    max_output_tokens=200,
+    temperature=0.8,  # 0 to 2; higher gives more varied wording
+    max_output_tokens=200,  # caps reply length, reasoning tokens included
 )
 print(response.output_text)
+# id for chaining turns, status, and input plus output tokens
 print(response.id, response.status, response.usage.total_tokens)
 ```
 
@@ -37,11 +39,12 @@ In this run the reply hit the 200-token cap, so `status` is `incomplete`.
 ## Next turn
 
 ```python
+# Next turn: link the first reply; instructions must be sent again
 follow_up = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     instructions="You are a helpful AI assistant that explains technology concepts clearly.",
     input="Can you give me an example?",
-    previous_response_id=response.id,
+    previous_response_id=response.id,  # earlier turn becomes context
 )
 print(follow_up.output_text)
 ```
@@ -49,6 +52,7 @@ print(follow_up.output_text)
 ## Foundry direct model
 
 ```python
+# Same call for a Foundry direct model; only the deployment changes
 response = openai_client.responses.create(
     model="microsoft-phi-4",  # deployment name
     input="What are the benefits of small language models?",
@@ -65,14 +69,18 @@ The [Create a generative AI chat app](https://microsoftlearning.github.io/mslear
 Create a New Foundry project, deploy `gpt-5.2`, and copy its **Azure OpenAI endpoint** and actual deployment name. This program uses the OpenAI v1 endpoint; the endpoint/SDK distinction is explained in [unit 03](03-choose-an-endpoint-and-sdk.md). Use Python 3.13, VS Code, and Azure CLI. In an activated virtual environment:
 
 ```bash
+# Lab packages; aiohttp is needed by the async Azure credential
 python -m pip install python-dotenv aiohttp azure-identity openai
+# Sign in so DefaultAzureCredential can use your account
 az login
 ```
 
 These are the lab's unpinned dependencies. The signed-in account needs access to the deployment. Save `.env` beside `chat-app.py`, substituting your resource and deployment names:
 
 ```dotenv
+# Azure OpenAI endpoint from the project home page, with /openai/v1/
 AZURE_OPENAI_ENDPOINT="https://<resource-name>.openai.azure.com/openai/v1/"
+# Deployment name (Name column on Deployments), passed as model
 MODEL_DEPLOYMENT="<your-gpt-5.2-deployment-name>"
 ```
 
@@ -89,17 +97,23 @@ from openai import OpenAI
 
 
 def main():
+    # Read AZURE_OPENAI_ENDPOINT and MODEL_DEPLOYMENT from .env
     load_dotenv()
     endpoint = os.environ["AZURE_OPENAI_ENDPOINT"]
     deployment = os.environ["MODEL_DEPLOYMENT"]
     instructions = "You are a helpful AI assistant."
+    # No previous response yet, so the first turn starts a new chat
     last_response_id = None
 
+    # Sign in with az login; the credential closes when the block ends
     with DefaultAzureCredential() as credential:
+        # Supplies Entra tokens to the SDK, so the program holds no key
         token_provider = get_bearer_token_provider(
             credential, "https://ai.azure.com/.default"
         )
+        # OpenAI client on the Azure OpenAI v1 endpoint
         with OpenAI(base_url=endpoint, api_key=token_provider) as client:
+            # One question per pass until you type quit
             while True:
                 prompt = input("Enter a prompt (or 'quit' to exit): ").strip()
                 if prompt.lower() == "quit":
@@ -107,28 +121,21 @@ def main():
                 if not prompt:
                     continue
 
+                # Send this turn's question, linked to the previous turn
                 response = client.responses.create(
                     model=deployment,  # deployment name
-                    instructions=instructions,
+                    instructions=instructions,  # not carried over by previous_response_id
                     input=prompt,
-                    previous_response_id=last_response_id,
+                    previous_response_id=last_response_id,  # earlier turn as context
                 )
                 print(response.output_text)
+                # Save this turn so the next question follows it
                 last_response_id = response.id
 
 
 if __name__ == "__main__":
     main()
 ```
-
-| Code | What it contributes to the conversation |
-| --- | --- |
-| `get_bearer_token_provider` | Supplies an Entra token to the SDK without putting a key in the program |
-| `last_response_id = None` | Starts a conversation with no previous response |
-| `input=prompt` | Sends this turn's user message |
-| `instructions=instructions` | Reapplies the assistant's rules on every request; a previous response ID does not inherit them |
-| `previous_response_id=last_response_id` | Makes the earlier turn available as context |
-| `last_response_id = response.id` | Saves the new turn so the next question follows this one |
 
 Run `python chat-app.py`. Ask `Tell me about the ELIZA chatbot.`, then `How does it compare to modern LLMs?` The second request refers to the first turn through its response ID. To compare a stateless request, remove the `previous_response_id` argument and start again. Use `quit` to exit.
 
@@ -137,22 +144,26 @@ Run `python chat-app.py`. Ask `Tell me about the ELIZA chatbot.`, then `How does
 Streaming changes **how the response arrives**, not how conversation state works. Inside the loop, replace the entire block from `response = client.responses.create(...)` through **both** `print(response.output_text)` and `last_response_id = response.id` with the following code, keeping the loop's indentation:
 
 ```python
+# Same request, but the reply arrives as a stream of events
 stream = client.responses.create(
     model=deployment,  # deployment name
     instructions=instructions,
     input=prompt,
     previous_response_id=last_response_id,
-    stream=True,
+    stream=True,  # return events as the text is generated
 )
 for event in stream:
+    # A delta is the next piece of text: print it now, no newline
     if event.type == "response.output_text.delta":
         print(event.delta, end="", flush=True)
+    # The completed event carries the response id for the next turn
     elif event.type == "response.completed":
         last_response_id = event.response.id
+# End the line after the streamed text
 print()
 ```
 
-A delta contains the next piece of text, so the terminal prints without a newline and flushes immediately. The completed event supplies the response ID for the next question. A failed or interrupted stream needs error handling in an application; partial text alone is not evidence of a completed response.
+A failed or interrupted stream needs error handling in an application; partial text alone is not evidence of a completed response.
 
 ### Async
 
@@ -168,22 +179,29 @@ from openai import AsyncOpenAI
 
 
 async def main():
+    # Read AZURE_OPENAI_ENDPOINT and MODEL_DEPLOYMENT from .env
     load_dotenv()
+    # Async credential from azure.identity.aio; closed when the block ends
     async with DefaultAzureCredential() as credential:
+        # Async token function; AsyncOpenAI awaits it before each request
         token_provider = get_bearer_token_provider(
             credential, "https://ai.azure.com/.default"
         )
+        # Async client: its API calls are awaited instead of blocking
         async with AsyncOpenAI(
             base_url=os.environ["AZURE_OPENAI_ENDPOINT"],
             api_key=token_provider,
         ) as client:
+            # Same chat loop and turn chaining as chat-app.py
             last_response_id = None
             while True:
+                # input() blocks the event loop, so turns run one at a time
                 prompt = input("Enter a prompt (or 'quit' to exit): ").strip()
                 if prompt.lower() == "quit":
                     break
                 if not prompt:
                     continue
+                # await lets other tasks run while the server works
                 response = await client.responses.create(
                     model=os.environ["MODEL_DEPLOYMENT"],  # deployment name
                     instructions="You are a helpful AI assistant.",
@@ -198,6 +216,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Save as `chat-async.py` and run `python chat-async.py`. The awaited API call lets other tasks run while the server works; this console still waits on `input()` and makes one request at a time. A single awaited request does not by itself make the model faster.
+Save as `chat-async.py` and run `python chat-async.py`. A single awaited request does not by itself make the model faster.
 
 Next, [Chat Completions](05-openai-api.md#lab-swap-in-chat-completions) uses the same authenticated connection but represents conversation history as messages in the application. Delete the exercise's disposable Azure resources when you have finished both versions.

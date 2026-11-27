@@ -8,12 +8,15 @@
 - For many data stores behind one agent, the unit points at **Foundry IQ** instead of this tool.
 
 ```python
+# Empty store that will index the policy file for search
 vector_store = openai_client.vector_stores.create(name="policy-docs")
+# Upload the PDF into the store and wait until it is processed
 with open("expenses_policy.pdf", "rb") as policy_file:
     openai_client.vector_stores.files.upload_and_poll(
         vector_store_id=vector_store.id,
         file=policy_file,
     )
+# Ask; the model can search that store before it answers
 response = openai_client.responses.create(
     model="gpt-4.1",  # deployment name
     instructions="You are an AI assistant that provides information from HR policy documents.",
@@ -21,7 +24,7 @@ response = openai_client.responses.create(
     tools=[
         {"type": "file_search", "vector_store_ids": [vector_store.id]},
     ],
-    include=["file_search_call.results"],
+    include=["file_search_call.results"],  # also return the matched chunks
 )
 print(response.output_text)
 ```
@@ -37,13 +40,15 @@ Use Python 3.13 and the deployed `gpt-5.2` model, Azure sign-in, and `.env` from
 In your activated virtual environment:
 
 ```bash
+# Install the lab packages
 python -m pip install python-dotenv azure-identity openai
+# Sign in so DefaultAzureCredential can use your account
 az login
 ```
 
 ### Index first, then ask a grounded question
 
-Save this assembled program as `tools-app.py`. The code follows the exercise and adds file/client cleanup plus checks for missing PDFs and failed indexing. Paths are relative to the script, so launching it from another directory still finds its brochures.
+Save this assembled program as `tools-app.py`. The code follows the exercise and adds file/client cleanup plus checks for missing PDFs and failed indexing.
 
 ```python
 import os
@@ -56,18 +61,22 @@ from openai import OpenAI
 
 
 def main():
+    # Paths start at this script's folder, so it runs from anywhere
     app_folder = Path(__file__).resolve().parent
     load_dotenv(app_folder / ".env")
+    # Stop early if the brochure PDFs are missing
     pdf_paths = sorted((app_folder / "brochures").glob("*.pdf"))
     if not pdf_paths:
         raise FileNotFoundError("Put the lab's brochures/*.pdf beside tools-app.py")
 
+    # A role, then a source rule: brochures for offerings, web for advice
     instructions = (
         "You are a travel assistant that provides information on travel services "
         "available from Margie's Travel. Answer questions about services offered "
         "by Margie's Travel using the provided travel brochures. Search the web "
         "for general information about destinations or current travel advice."
     )
+    # Sign in with az login and connect to the Azure OpenAI endpoint
     with DefaultAzureCredential() as credential:
         token_provider = get_bearer_token_provider(
             credential, "https://ai.azure.com/.default"
@@ -76,59 +85,58 @@ def main():
             base_url=os.environ["AZURE_OPENAI_ENDPOINT"],
             api_key=token_provider,
         ) as client:
+            # A searchable store for the brochures; print its id
             vector_store = client.vector_stores.create(name="travel-brochures")
             print("Vector store:", vector_store.id)
+            # Open every PDF; ExitStack closes them all when the block ends
             with ExitStack() as stack:
                 file_streams = [
                     stack.enter_context(path.open("rb")) for path in pdf_paths
                 ]
+                # Upload all PDFs; wait for processing before any question
                 batch = client.vector_stores.file_batches.upload_and_poll(
                     vector_store_id=vector_store.id,
                     files=file_streams,
                 )
             print("Files indexed:", batch.file_counts.completed)
+            # Stop if any brochure failed; its content would be unsearchable
             if batch.file_counts.failed:
                 raise RuntimeError("A brochure failed to index; inspect the file batch.")
 
             last_response_id = None
+            # One question per pass until you type quit
             while True:
                 prompt = input("Enter a travel question (or 'quit' to exit): ").strip()
                 if prompt.lower() == "quit":
                     break
                 if not prompt:
                     continue
+                # Offer both tools; the instructions guide which one to use
                 response = client.responses.create(
                     model=os.environ["MODEL_DEPLOYMENT"],  # deployment name
                     instructions=instructions,
                     input=prompt,
-                    previous_response_id=last_response_id,
+                    previous_response_id=last_response_id,  # lets follow-ups refer back
                     tools=[
+                        # Lets the model search the brochure store
                         {"type": "file_search", "vector_store_ids": [vector_store.id]},
+                        # Second source: public and current information
                         {"type": "web_search"},
                     ],
-                    include=["file_search_call.results"],
+                    include=["file_search_call.results"],  # add retrieved chunks to inspect
                 )
                 print(response.output_text)
+                # Offering a tool doesn't mean it ran; print the tools used
                 for item in response.output:
                     if item.type in {"file_search_call", "web_search_call"}:
                         print("Tool used:", item.type)
+                # The next question continues from this turn
                 last_response_id = response.id
 
 
 if __name__ == "__main__":
     main()
 ```
-
-| Step | Why it belongs in a retrieval application |
-| --- | --- |
-| `vector_stores.create` | Gives the brochures a searchable store with an ID |
-| `upload_and_poll` | Waits for file processing before requests can search the documents |
-| `file_search` with `vector_store_ids` | Makes that store available to the model |
-| `web_search` | Supplies a second source for public and current information |
-| `instructions` | Explains which source to use for company offerings versus destination advice |
-| `include=["file_search_call.results"]` | Adds retrieved chunks to the response object for inspection |
-| `response.output` | Shows which tools actually ran; declaring a tool does not prove that it was used |
-| `previous_response_id` | Lets a later question refer to the city discussed earlier |
 
 Run `python tools-app.py`. First ask about visiting San Francisco next month, then ask which hotels Margie's Travel offers there. Check the printed tool types, source citations, and retrieved results against the PDFs. The first question may use the web; the second should use the brochures. Treat these as behaviors to verify, since the model chooses its calls.
 

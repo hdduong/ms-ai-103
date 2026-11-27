@@ -22,38 +22,47 @@ from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 from title_agent.agent_executor import create_foundry_agent_executor
 
+# Maps A2A requests (send, get, cancel) to the executor and store
 request_handler = DefaultRequestHandler(
     agent_executor=create_foundry_agent_executor(agent_card),
-    task_store=InMemoryTaskStore(),
+    task_store=InMemoryTaskStore(),  # task state lives in memory only
 )
+# A2A HTTP layer: serves unit 02's card and the JSON-RPC endpoint
 a2a_app = A2AStarletteApplication(
     agent_card=agent_card,
     http_handler=request_handler,
 )
 
+# Readiness check that run_all.py polls before going on
 async def health_check(request):
     return PlainTextResponse("Title agent is running")
 
+# A2A routes (JSON-RPC endpoint and Agent Card), plus /health
 routes = a2a_app.routes()
 routes.append(Route("/health", endpoint=health_check, methods=["GET"]))
+# The "app" that uvicorn title_agent.server:app loads
 app = Starlette(routes=routes)
 
 if __name__ == "__main__":
+    # Serve on the host and port read from .env in the card block
     uvicorn.run(app, host=host, port=port)
 ```
 
-`DefaultRequestHandler` connects incoming A2A operations to `FoundryAgentExecutor`. `A2AStarletteApplication` creates the protocol and card routes. The extra `/health` route is part of the [exercise launcher](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/09-build-remote-agents-with-a2a/python/run_all.py): it waits for each server to report readiness before continuing. Omitting it can make an otherwise working A2A server fail the launcher's readiness check.
+The extra `/health` route is part of the [exercise launcher](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/09-build-remote-agents-with-a2a/python/run_all.py): it waits for each server to report readiness before continuing. Omitting it can make an otherwise working A2A server fail the launcher's readiness check.
 
 From the exercise's `python` folder, test only the title server with:
 
 ```bash
+# Load app from title_agent/server.py and serve it on port 10007
 python -m uvicorn title_agent.server:app --host localhost --port 10007
 ```
 
 In another terminal:
 
 ```bash
+# Readiness text, the same check run_all.py makes
 curl http://localhost:10007/health
+# The Agent Card, at its well-known path
 curl http://localhost:10007/.well-known/agent-card.json
 ```
 

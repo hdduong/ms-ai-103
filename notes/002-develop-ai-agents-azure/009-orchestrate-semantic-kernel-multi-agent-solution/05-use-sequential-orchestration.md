@@ -16,16 +16,21 @@ Lab: [Develop a multi-agent solution](https://microsoftlearning.github.io/mslear
 Use Python **3.13** and a deployed model in a Foundry project. In a working folder, create an environment and install the [exercise package versions](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/08-agent-orchestration/Python/requirements.txt):
 
 ```bash
+# Create a virtual environment and activate it
 python -m venv .venv
 source .venv/bin/activate
+# Install the exercise's pinned packages, orchestrations included
 python -m pip install python-dotenv azure-identity==1.25.3 agent-framework-core==1.12.1 agent-framework-foundry==1.10.3 agent-framework-orchestrations==1.0.1
+# Sign in so AzureCliCredential can use your account
 az login
 ```
 
 On PowerShell, activate with `.\.venv\Scripts\Activate.ps1`. Save `.env` beside the program. This lab uses `AZURE_AI_` names, not the ones from module 008:
 
 ```dotenv
+# Project endpoint from the Foundry project home page
 AZURE_AI_PROJECT_ENDPOINT=https://{resource-name}.services.ai.azure.com/api/projects/<project-name>
+# Name of your model deployment, not the catalog model name
 AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5
 ```
 
@@ -48,12 +53,15 @@ from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 
 async def main():
+    # Read the AZURE_AI_* endpoint and deployment name from .env
     load_dotenv()
+    # One chat client for the deployment, shared by all three agents
     chat_client = FoundryChatClient(
         credential=AzureCliCredential(),
         project_endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
         model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],  # deployment name
     )
+    # as_agent builds an Agent on the shared client; one role each
     summarizer_agent = chat_client.as_agent(
         name="summarizer",
         instructions="Summarize the customer's feedback in one short, neutral sentence.",
@@ -66,6 +74,7 @@ async def main():
         name="action",
         instructions="Based on the summary and classification, suggest the next action in one short sentence.",
     )
+    # Pipeline input; rerun later with the test cases below
     feedback = (
         "I use the dashboard every day to monitor metrics, and it works well overall. "
         "But when I'm working late at night, the bright screen is really harsh on my eyes. "
@@ -74,18 +83,19 @@ async def main():
     # List order defines execution order; later agents see accumulated messages.
     workflow = SequentialBuilder(
         participants=[summarizer_agent, classifier_agent, action_agent],
-        output_from="all",
+        output_from="all",  # keep every agent's message, not just the last
     ).build()
+    # Run the pipeline once and wait for all three agents
     result = await workflow.run(f"Customer feedback: {feedback}")
+    # One response per agent, in pipeline order
     for response in result.get_outputs():
+        # Label each line with the agent's name, or its role if unnamed
         for message in response.messages:
             print(f"[{message.author_name or message.role}] {message.text}")
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
-
-`as_agent(...)` creates agents sharing one client configuration while keeping separate roles. `SequentialBuilder` passes the accumulated conversation onward, so the action agent has the original feedback, summary, and classification. `output_from="all"` exposes each participant response; the nested print loop reads each response's messages and labels their authors.
 
 ### Check the result
 

@@ -15,12 +15,14 @@ A workflow is an agent of kind workflow, so the agents API lists its versions. E
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 
+# Open the Foundry project, signed in with az login
 project_client = AIProjectClient(
     credential=DefaultAzureCredential(),
     endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
 )
+# List the workflow's saved versions through the agents API
 for version in project_client.agents.list_versions(
-    agent_name="ContosoPay-Customer-Support-Triage",
+    agent_name="ContosoPay-Customer-Support-Triage",  # workflow name; same for every version
 ):
     print(version.version, version.created_at)
 ```

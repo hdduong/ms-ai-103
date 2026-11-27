@@ -13,16 +13,18 @@
 - Required: a Foundry project and a deployed model. Optional later: Azure AI Search, Storage, Key Vault, Functions, Foundry IQ.
 - Portal for exploration and reviews. VS Code for the code that ships. Teams often use both.
 
-The exercise uses the portal to save the agent and a Python client to call it. The connection fragment below shows the SDK relationship: `AIProjectClient` manages project resources, and `get_openai_client()` provides the Responses and Conversations APIs for that project. Complete local setup is in [unit 05](05-set-up-vs-code.md#prepare-the-python-client); the runnable application is in [unit 08](08-test-deploy-integrate.md#lab-client-chat-with-the-portal-agent).
+The exercise uses the portal to save the agent and a Python client to call it. The connection fragment below shows the SDK relationship. Complete local setup is in [unit 05](05-set-up-vs-code.md#prepare-the-python-client); the runnable application is in [unit 08](08-test-deploy-integrate.md#lab-client-chat-with-the-portal-agent).
 
 ```python
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 
+# Project client: manages agents, deployments, connections, and more
 project_client = AIProjectClient(
-    credential=DefaultAzureCredential(),
+    credential=DefaultAzureCredential(),  # az login locally, managed identity on Azure
     endpoint="https://{resource-name}.services.ai.azure.com/api/projects/<project-name>",
 )
+# OpenAI-style client on this project, with the same sign-in
 openai_client = project_client.get_openai_client()
 # Use this client for conversations and responses in unit 08.
 ```

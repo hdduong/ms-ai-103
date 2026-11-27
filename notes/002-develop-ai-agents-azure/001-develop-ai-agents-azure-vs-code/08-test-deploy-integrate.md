@@ -16,7 +16,7 @@ The [portal and VS Code exercise](https://microsoftlearning.github.io/mslearn-ai
 
 ### Download the result of Code Interpreter
 
-The model's text is only part of the response. A generated chart can be referenced by a `container_file_citation` annotation, which supplies the container ID, file ID, and suggested filename. Start `agent_client.py` with a helper that retrieves that file and returns its local path:
+The model's text is only part of the response. A generated chart can be referenced by a `container_file_citation` annotation, which supplies the container ID, file ID, and suggested filename. Start `agent_client.py` with a helper that retrieves that file:
 
 ```python
 import os
@@ -30,76 +30,93 @@ from dotenv import load_dotenv
 
 def save_artifacts(client, response, downloaded):
     output_dir = Path("agent_outputs")
+    # Only message items carry file citations; skip the others
     for item in response.output:
         if item.type != "message":
             continue
         for content in item.content:
+            # Not every content part has annotations; missing means none
             for annotation in getattr(content, "annotations", None) or []:
+                # Keep only citations of files in the Code Interpreter container
                 if annotation.type != "container_file_citation":
                     continue
+                # The same file can be cited more than once; download it once
                 key = (annotation.container_id, annotation.file_id)
                 if key not in downloaded:
                     output_dir.mkdir(exist_ok=True)
+                    # Base name only (or output.bin), so files stay in agent_outputs/
                     filename = Path(annotation.filename or "output.bin").name
                     if filename in {"", ".", ".."}:
                         filename = "output.bin"
+                    # Random prefix so a new file doesn't overwrite an earlier one
                     target = output_dir / f"{uuid4().hex[:8]}_{filename}"
+                    # Download the file's bytes from the Code Interpreter container
                     data = client.containers.files.content.retrieve(
                         container_id=annotation.container_id,
                         file_id=annotation.file_id,
                     )
                     target.write_bytes(data.read())
                     downloaded[key] = target
+                # Print the local path, whether new or saved earlier
                 print("Saved artifact:", downloaded[key])
 ```
 
-The cache avoids downloading the same cited file repeatedly. Taking only the filename and adding a unique prefix keeps files inside `agent_outputs/` and avoids overwriting an earlier chart. This teaching adaptation focuses on Code Interpreter's cited files; the [upstream client](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/01-build-agent-portal-and-vscode/Python/agent_with_functions.py) also handles additional image output forms and rewrites file citations in the displayed text.
+This teaching adaptation focuses on Code Interpreter's cited files; the [upstream client](https://github.com/MicrosoftLearning/mslearn-ai-agents/blob/4d6a32629722927bd5f1034e0b5396e0da4e962c/Labfiles/01-build-agent-portal-and-vscode/Python/agent_with_functions.py) also handles additional image output forms and rewrites file citations in the displayed text.
 
 ### Preserve the conversation across turns
 
-Append the following block. The saved agent owns the model and hosted-tool configuration. The conversation owns the chat history.
+Append the following block.
 
 ```python
 def main():
+    # Read PROJECT_ENDPOINT and AGENT_NAME from .env
     load_dotenv()
+    # Sign in with az login, open the project, get the OpenAI-style client
     with (
         DefaultAzureCredential() as credential,
         AIProjectClient(endpoint=os.environ["PROJECT_ENDPOINT"],
                         credential=credential) as project,
         project.get_openai_client() as client,
     ):
+        # Load the portal agent; it holds the model and tool settings
         agent = project.agents.get(agent_name=os.environ["AGENT_NAME"])
+        # Empty conversation; it keeps the chat history across turns
         conversation = client.conversations.create(items=[])
+        # Cache of files already saved, kept across turns
         downloaded = {}
         try:
+            # Chat until you type exit or quit
             while True:
                 prompt = input("You (exit to stop): ").strip()
                 if prompt.lower() in {"exit", "quit"}:
                     break
                 if not prompt:
                     continue
+                # Add your message to the conversation first
                 client.conversations.items.create(
                     conversation_id=conversation.id,
                     items=[{"type": "message", "role": "user", "content": prompt}],
                 )
+                # Run the saved agent on the conversation, not a bare model
                 response = client.responses.create(
                     conversation=conversation.id,
                     extra_body={"agent_reference": {"name": agent.name, "type": "agent_reference"}},
-                    input="",
+                    input="",  # empty: the prompt is already in the conversation
                 )
+                # The run failed on the service side
                 if response.status == "failed":
                     raise RuntimeError(str(response.error))
                 print("Agent:", response.output_text)
+                # Foundry already ran the tools; just download cited files
                 save_artifacts(client, response, downloaded)
         finally:
+            # Delete this chat even on errors; the portal agent stays
             client.conversations.delete(conversation_id=conversation.id)
 
 
 if __name__ == "__main__":
     main()
 ```
-
-Each prompt is added as a conversation item before the response call, so `input=""` does not mean the agent has no question. `agent_reference` selects the saved configuration, and `conversation` preserves context across turns. Foundry executes the hosted tools; `save_artifacts` only retrieves their outputs. Cleanup deletes this chat conversation and closes clients, while preserving the portal-created agent.
 
 ```bash
 python agent_client.py
@@ -123,24 +140,28 @@ Content-Type: application/json
 
 `model` is not on this call. The agent already has the deployment.
 
-The same call from Python. The token scope is `https://ai.azure.com/.default`, and the caller needs a role that permits invocation on the agent.
+The same call from Python. The caller needs a role that permits invocation on the agent.
 
 ```python
 import requests
 from azure.identity import DefaultAzureCredential
 
+# Entra ID bearer token for Foundry; this endpoint takes no API keys
 token = DefaultAzureCredential().get_token("https://ai.azure.com/.default").token
+# Stable Responses endpoint; same URL across agent versions
 url = (
     "https://{resource-name}.services.ai.azure.com/api/projects/<project-name>"
     "/agents/it-support-agent/endpoint/protocols/openai/responses"
     "?api-version=2025-11-15-preview"
 )
+# No model in the body: the agent already has its deployment
 response = requests.post(
     url,
     headers={"Authorization": f"Bearer {token}"},
     json={"input": "Say hello"},
     timeout=60,
 )
+# Raise on any HTTP error, such as a missing role
 response.raise_for_status()
 print(response.status_code, response.json())
 ```

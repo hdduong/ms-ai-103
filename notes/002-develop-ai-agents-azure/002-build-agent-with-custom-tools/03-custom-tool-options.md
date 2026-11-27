@@ -22,25 +22,29 @@ from azure.ai.projects.models import FunctionTool
 
 
 def function_tool(name, description, properties):
+    # Only the contract the model sees; no Python is uploaded or run
     return FunctionTool(
-        name=name,
-        description=description,
+        name=name,  # must match a key in the app's FUNCTIONS allowlist
+        description=description,  # helps the model decide when to call it
         parameters={
             "type": "object",
             "properties": properties,
-            "required": list(properties),
-            "additionalProperties": False,
+            "required": list(properties),  # every argument, as strict mode expects
+            "additionalProperties": False,  # reject extra fields (strict mode requires it)
         },
-        strict=True,
+        strict=True,  # the model's arguments must match the schema exactly
     )
 
 
+# Argument schemas shared by more than one tool
 LOCATION = {"type": "string", "description": "Continent, e.g. south_america."}
+# enum limits tier and priority; Python still checks hours > 0
 COST_PROPERTIES = {
     "telescope_tier": {"type": "string", "enum": ["standard", "advanced", "premium"]},
     "hours": {"type": "number", "description": "Positive number of rental hours."},
     "priority": {"type": "string", "enum": ["low", "normal", "high", "urgent"]},
 }
+# One contract per function; agent.py passes this list to the agent
 TOOLS = [
     function_tool("next_visible_event", "Find the next event in the sample data.",
                   {"location": LOCATION}),
@@ -52,11 +56,6 @@ TOOLS = [
 ]
 ```
 
-- `name` must match a function that the application's dispatch table allows.
-- `description` helps the model decide when the tool is relevant.
-- `properties` defines argument names and types. Here every property is required, and `additionalProperties=False` rejects extra fields under the strict schema.
-- `enum` narrows the tier and priority to the supported values. Python still checks the numeric value of `hours` and performs the calculation.
-
 A request for an event can produce a call named `next_visible_event` with arguments `{"location": "south_america"}`. That call is a request for the application to do work. [Unit 04](04-how-use-custom-tools.md#lab-astronomy-agent) runs it and returns the result with the matching `call_id`.
 
 ## Other execution options
@@ -64,8 +63,6 @@ A request for an event can produce a call named `next_visible_event` with argume
 The following fragments illustrate the other options in the Learn unit. They assume an initialized `project_client` as shown in [unit 04](04-how-use-custom-tools.md#connect-the-functions-to-the-agent); they are alternatives to the local astronomy functions, not extra files required by that example. Provision the corresponding queue/function or HTTP API before using one.
 
 ## Azure Function tool
-
-Input queue and output queue, plus the function name and the same kind of parameter schema.
 
 ```python
 from azure.ai.projects.models import (
@@ -77,20 +74,24 @@ from azure.ai.projects.models import (
     PromptAgentDefinition,
 )
 
+# Hosted tool: Foundry calls the function through storage queues
 tool = AzureFunctionTool(
     azure_function=AzureFunctionDefinition(
+        # Foundry puts each tool call on this queue; it triggers the function
         input_binding=AzureFunctionBinding(
             storage_queue=AzureFunctionStorageQueue(
                 queue_name="snowfall-in",
                 queue_service_endpoint="https://{storage}.queue.core.windows.net",
             ),
         ),
+        # The function writes its result here; Foundry reads it back
         output_binding=AzureFunctionBinding(
             storage_queue=AzureFunctionStorageQueue(
                 queue_name="snowfall-out",
                 queue_service_endpoint="https://{storage}.queue.core.windows.net",
             ),
         ),
+        # Name, purpose, and argument schema the model sees
         function=AzureFunctionDefinitionFunction(
             name="queue_trigger",
             description="Get snowfall for a city.",
@@ -103,6 +104,7 @@ tool = AzureFunctionTool(
         ),
     ),
 )
+# Save an agent version whose only tool is this Azure Function
 agent = project_client.agents.create_version(
     agent_name="snowfall-function-agent",
     definition=PromptAgentDefinition(
@@ -150,17 +152,20 @@ from azure.ai.projects.models import (
     PromptAgentDefinition,
 )
 
+# Load the spec above, saved as weather_openapi.json
 with open("weather_openapi.json", "r") as spec_file:
     openapi_weather = json.load(spec_file)
 
+# Hosted tool: Foundry reads the spec and sends the HTTP request
 tool = OpenApiTool(
     openapi=OpenApiFunctionDefinition(
         name="get_weather",
         spec=openapi_weather,
         description="Retrieve weather information for a location.",
-        auth=OpenApiAnonymousAuthDetails(),
+        auth=OpenApiAnonymousAuthDetails(),  # no auth, to match "security": [] in the spec
     ),
 )
+# Save an agent version whose only tool is this weather API
 agent = project_client.agents.create_version(
     agent_name="openapi-agent",
     definition=PromptAgentDefinition(

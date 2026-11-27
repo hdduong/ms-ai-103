@@ -20,12 +20,14 @@ The Learn unit also demonstrates creating the tool in code. This definition frag
 import os
 from azure.ai.projects.models import MCPTool, PromptAgentDefinition
 
+# Expose the knowledge base to the agent as a remote MCP tool
 knowledge_tool = MCPTool(
-    server_label="product-docs",
-    server_url=os.environ["KNOWLEDGE_BASE_MCP_URL"],
-    project_connection_id=os.environ["SEARCH_PROJECT_CONNECTION_ID"],
-    require_approval="always",
+    server_label="product-docs",  # name that tags this server's calls
+    server_url=os.environ["KNOWLEDGE_BASE_MCP_URL"],  # knowledge base MCP endpoint with api-version
+    project_connection_id=os.environ["SEARCH_PROJECT_CONNECTION_ID"],  # handles Search auth
+    require_approval="always",  # pause for approval before each retrieval
 )
+# Save an agent version whose only tool is the knowledge base
 agent = project_client.agents.create_version(
     agent_name="product-support-agent",
     definition=PromptAgentDefinition(

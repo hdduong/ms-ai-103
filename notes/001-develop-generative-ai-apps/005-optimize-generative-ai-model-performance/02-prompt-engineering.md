@@ -17,6 +17,7 @@
 In the [travel tools application](../004-use-generative-ai-tools/05-file-search.md#lab-brochures-plus-web-search), the prompt defines a role and a source-selection policy:
 
 ```python
+# A role, then a source rule: brochures for offerings, web for advice
 instructions = (
     "You are a travel assistant that provides information on travel services "
     "available from Margie's Travel. Answer questions about services offered "
@@ -25,4 +26,4 @@ instructions = (
 )
 ```
 
-This is the `instructions` variable from that application's request. The first sentence defines the role; the next separates company offerings from public destination advice. The instruction does not supply brochures or execute a search: the app must also attach the corresponding tools. To evaluate a prompt change, keep the deployment, documents, and test questions fixed and inspect which sources the response used.
+This is the `instructions` variable from that application's request. The instruction does not supply brochures or execute a search: the app must also attach the corresponding tools. To evaluate a prompt change, keep the deployment, documents, and test questions fixed and inspect which sources the response used.

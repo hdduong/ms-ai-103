@@ -23,44 +23,52 @@ from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 
 async def main():
+    # Read the AZURE_AI_* endpoint and deployment name from .env
     load_dotenv()
+    # One chat client for the deployment, shared by every agent
     client = FoundryChatClient(
         project_endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
         model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],  # deployment name
         credential=AzureCliCredential(),
     )
+    # Specialist with no tools: it only pulls numbers out of the task
     researcher = Agent(
         client=client,
         name="ResearcherAgent",
-        description="Extracts the supplied assumptions",
+        description="Extracts the supplied assumptions",  # the manager reads this when it plans
         instructions="Extract the assumptions supplied in the task. Do not invent current prices or browse; no search tool is configured. Do not calculate.",
     )
+    # Specialist that can run code for the arithmetic
     coder = Agent(
         client=client,
         name="CoderAgent",
         description="Writes and runs code",
         instructions="Answer with code and show the calculation.",
-        tools=client.get_code_interpreter_tool(),
+        tools=client.get_code_interpreter_tool(),  # hosted tool; the code runs in Foundry
     )
+    # The manager plans, picks each next specialist, and writes the answer
     manager = Agent(
         client=client,
         name="MagenticManager",
         description="Plans and delegates",
         instructions="Plan the steps, pick one specialist per step, and stop when the task is done.",
     )
+    # The three limits keep the plan-and-delegate loop bounded
     workflow = MagenticBuilder(
         participants=[researcher, coder],
         manager_agent=manager,
-        max_round_count=10,
-        max_stall_count=3,
-        max_reset_count=2,
+        max_round_count=10,  # total coordination rounds
+        max_stall_count=3,  # rounds without progress before it replans
+        max_reset_count=2,  # replans allowed before the run stops
     ).build()
+    # The task supplies the rates, since no agent can look them up
     result = await workflow.run(
         "Estimate a 30-day token cost for 10,000 chats/day, each with "
         "1,000 input tokens and 500 output tokens. Use hypothetical rates "
         "of $2/million input tokens and $8/million output tokens. "
         "Show assumptions and arithmetic; these are not current model prices."
     )
+    # Only the manager's final answer, or a message if a limit was hit
     for output in result.get_outputs():
         print(output.text)
 
@@ -69,6 +77,6 @@ if __name__ == "__main__":
 ```
 
 
-Save as `estimate_cost.py`. The researcher extracts the supplied assumptions, the coder can execute arithmetic with the hosted interpreter, and the manager decides which participant should act next. The three limits bound coordination rounds, repeated lack of progress, and replanning attempts.
+Save as `estimate_cost.py`.
 
 The supplied hypothetical figures give 300 million input tokens and 150 million output tokens for 30 days: **600 + 1,200 = 1,800 dollars**. Use that arithmetic to check the final answer. The program does not retrieve live prices. Printing `result.get_outputs()` shows the synthesized response; a complete plan/progress log requires the [Magentic event stream](https://learn.microsoft.com/en-us/agent-framework/workflows/orchestrations/magentic#run-the-workflow-with-event-streaming).

@@ -37,31 +37,41 @@ from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
+# Typed classifier output; only these three labels are valid
 class Route(BaseModel):
     kind: Literal["billing", "technical", "unknown"]
 
+# What the router sends on: the label plus the original ticket
 @dataclass
 class Routed:
     kind: str
     text: str
 
+# Build a switch-case condition that matches one route label
 def is_kind(kind: str):
     def condition(message: Any) -> bool:
         return isinstance(message, Routed) and message.kind == kind
     return condition
 
+# Entry step: keep the ticket, then pass it to the classifier
 @executor(id="start")
 async def start(ticket: str, ctx: WorkflowContext[AgentExecutorRequest]) -> None:
+    # Save the ticket in workflow state so to_route can reuse it
     ctx.set_state("ticket", ticket)
+    # Send it as a user message; should_respond=True runs the agent now
     await ctx.send_message(
         AgentExecutorRequest(messages=[Message("user", contents=[ticket])], should_respond=True)
     )
 
+# Turn the classifier's JSON reply into a Routed message
 @executor(id="to_route")
 async def to_route(response: AgentExecutorResponse, ctx: WorkflowContext[Routed]) -> None:
+    # Validate the reply against Route; malformed JSON raises here
     route = Route.model_validate_json(response.agent_response.text)
+    # Pair the label with the ticket that start saved
     await ctx.send_message(Routed(kind=route.kind, text=ctx.get_state("ticket")))
 
+# Destinations: Never means nothing is sent on; str is what they yield
 @executor(id="billing")
 async def billing(item: Routed, ctx: WorkflowContext[Never, str]) -> None:
     await ctx.yield_output(f"Billing team: {item.text}")
@@ -70,12 +80,15 @@ async def billing(item: Routed, ctx: WorkflowContext[Never, str]) -> None:
 async def technical(item: Routed, ctx: WorkflowContext[Never, str]) -> None:
     await ctx.yield_output(f"Technical team: {item.text}")
 
+# Default target: "unknown", or any label no Case matched
 @executor(id="fallback")
 async def fallback(item: Routed, ctx: WorkflowContext[Never, str]) -> None:
     await ctx.yield_output(f"Ask the user to rephrase: {item.text}")
 
 async def main():
+    # Read the AZURE_AI_* endpoint and deployment name from .env
     load_dotenv()
+    # Wrap the classifier agent so it can run as a workflow step
     classifier = AgentExecutor(
         Agent(
             client=FoundryChatClient(
@@ -85,13 +98,15 @@ async def main():
             ),
             name="classifier",
             instructions="Return JSON with kind set to billing, technical, or unknown.",
-            default_options=OpenAIChatOptions[Any](response_format=Route),
+            default_options=OpenAIChatOptions[Any](response_format=Route),  # structured output shaped like Route
         )
     )
+    # Graph: start, classifier, to_route, then one switch-case branch
     workflow = (
         WorkflowBuilder(start_executor=start)
         .add_edge(start, classifier)
         .add_edge(classifier, to_route)
+        # Cases are checked in order; the first match wins, else Default
         .add_switch_case_edge_group(
             to_route,
             [
@@ -102,7 +117,9 @@ async def main():
         )
         .build()
     )
+    # One ticket in; it ends at exactly one destination
     result = await workflow.run("I was charged twice for the same invoice.")
+    # Every yield is an output here: classifier reply, then team text
     print(result.get_outputs())
 
 if __name__ == "__main__":
@@ -112,6 +129,6 @@ if __name__ == "__main__":
 The SDK also has `HandoffBuilder(participants=[...]).with_start_agent(triage).build()`. It gives each agent a handoff tool, so the agents pick the next specialist themselves instead of a fixed switch-case.
 
 
-Save as `route_ticket.py`. `start` stores the original ticket before the classifier turns its input into structured output. `to_route` combines the predicted category with that preserved text. The switch evaluates Billing and Technical cases, then sends `unknown` to the default executor. A malformed JSON response still needs error handling; the default edge handles an unmatched valid route, not a parsing exception.
+Save as `route_ticket.py`. A malformed JSON response still needs error handling; the default edge handles an unmatched valid route, not a parsing exception.
 
-For the duplicate-charge prompt, check that the output begins with `Billing team:` and includes the original ticket. No ticket is assigned to a real team: `ctx.yield_output(...)` emits text. Replacing those executors with specialist agents or business operations is a further application step.
+For the duplicate-charge prompt, check that the outputs include a `Billing team:` line with the original ticket. The classifier's own reply is printed first, because the builder sets no `output_from`. No ticket is assigned to a real team: `ctx.yield_output(...)` emits text. Replacing those executors with specialist agents or business operations is a further application step.

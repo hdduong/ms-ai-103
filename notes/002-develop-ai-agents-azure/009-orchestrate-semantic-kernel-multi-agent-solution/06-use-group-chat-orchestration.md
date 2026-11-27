@@ -25,28 +25,36 @@ from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 
 async def main():
+    # Read the AZURE_AI_* endpoint and deployment name from .env
     load_dotenv()
+    # One chat client for the deployment, shared by every agent
     client = FoundryChatClient(
         project_endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
         model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],  # deployment name
         credential=AzureCliCredential(),
     )
+    # The manager picks who speaks next and decides when to stop
     manager = Agent(
         client=client,
         name="Manager",
         description="Picks the next speaker",
         instructions="Writer drafts first, then Reviewer checks it. Finish when Reviewer has no changes.",
     )
+    # Participants; the manager reads each description to choose a speaker
     writer = Agent(client=client, name="Writer", description="Drafts the reply", instructions="Draft a short reply to the support ticket.")
     reviewer = Agent(client=client, name="Reviewer", description="Checks the draft", instructions="Say what the draft got wrong, or say it is ready.")
+    # One shared transcript; the manager picks one speaker per turn
     workflow = GroupChatBuilder(
         participants=[writer, reviewer],
-        orchestrator_agent=manager,
-        output_from="all",
-        max_rounds=4,
+        orchestrator_agent=manager,  # an agent, not a fixed rule, picks turns
+        output_from="all",  # participants' replies too, not only the final message
+        max_rounds=4,  # hard cap on manager selection rounds
+        # Also stop once four assistant replies are in the transcript
         termination_condition=lambda messages: sum(1 for m in messages if m.role == "assistant") >= 4,
     ).build()
+    # The ticket opens the shared conversation
     result = await workflow.run("Users can't reset their password from the mobile app.")
+    # Each participant reply, then the manager's closing message
     for response in result.get_outputs():
         for message in response.messages:
             print(message.author_name or message.role, message.text)
@@ -56,6 +64,6 @@ if __name__ == "__main__":
 ```
 
 
-Save as `group_review.py`. `manager` controls turn selection; it is separate from the `participants` that draft and review. Each participant sees the shared transcript, so the reviewer can assess the writer's actual response and the writer can revise it. The manager may finish early; the explicit limits bound continued discussion.
+Save as `group_review.py`. Each participant sees the shared transcript, so the reviewer can assess the writer's actual response and the writer can revise it. The manager may finish early; the explicit limits bound continued discussion.
 
 Check the printed authors and content: Writer should draft a reply, and Reviewer should comment on that draft. This program generates and reviews text; it contains no tool that sends a support response. The labeled participant responses and manager completion are useful for inspecting the collaboration, while the [sequential exercise](05-use-sequential-orchestration.md#lab-feedback-pipeline) offers a fixed-order alternative.

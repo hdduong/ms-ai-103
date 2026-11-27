@@ -25,11 +25,13 @@ Apply these concepts in the optional [Work IQ exercise](https://microsoftlearnin
 Check **Entra ID > Enterprise applications** for the public Work IQ application ID below. If it already exists, reuse it. Otherwise, an authorized **Global Administrator** performs this one-time tenant setup; replace `YOUR_TENANT_ID` with the Microsoft 365 tenant ID:
 
 ```azurecli
+# Sign in to the Microsoft 365 tenant where the user data lives
 az login --tenant "YOUR_TENANT_ID"
+# Create the Work IQ service principal so it shows in API permissions
 az ad sp create --id fdcc1f02-fc51-4226-8753-f668596af7f7
 ```
 
-`az login` selects the tenant where the account's data lives. `az ad sp create` provisions that tenant's instance of the **Work IQ service**, so Work IQ appears when adding API permissions. The returned `appId` should match the supplied ID; this is not the client ID of the app you create next. Resolve provisioning errors before proceeding ([tenant setup](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/enable-work-iq)).
+The returned `appId` should match the supplied ID; this is not the client ID of the app you create next. Resolve provisioning errors before proceeding ([tenant setup](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/enable-work-iq)).
 
 Create or reuse a **single-tenant app registration** in that tenant. Add the delegated `WorkIQAgent.Ask` permission, grant admin consent, and create or reuse a valid client secret. Keep the secret **Value**, not its Secret ID, for the connection. Ordinary tool use does not require the administrator role.
 

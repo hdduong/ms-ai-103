@@ -29,23 +29,29 @@ import requests
 from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
 
+# Read FOUNDRY_AGENT_RESPONSES_URL from .env
 load_dotenv()
 
 def ask_foundry_agent(text: str) -> dict:
+    # Sign in with az login; you need a role that can invoke the agent
     with DefaultAzureCredential() as credential:
+        # Get an Entra access token scoped to Foundry
         token = credential.get_token("https://ai.azure.com/.default").token
+        # Send one user turn to the published agent's Responses endpoint
         response = requests.post(
-            os.environ["FOUNDRY_AGENT_RESPONSES_URL"],
+            os.environ["FOUNDRY_AGENT_RESPONSES_URL"],  # copied from the agent's Details tab
             headers={"Authorization": f"Bearer {token}"},
-            json={"input": text},
+            json={"input": text},  # just the message; the URL selects the agent
             timeout=60,
         )
+    # Fail on HTTP errors instead of treating the error body as an answer
     response.raise_for_status()
     return response.json()
 
+# Send one test question and print the raw response JSON
 print(ask_foundry_agent("What are the laptop password requirements?"))
 ```
 
-`get_token` authenticates the caller; `input` carries the user's message; `raise_for_status` exposes a failed request instead of treating the error body as an answer. Run `python invoke-agent.py` and inspect the returned response before connecting this helper to a Teams message handler.
+Run `python invoke-agent.py` and inspect the returned response before connecting this helper to a Teams message handler.
 
 This helper sends one turn and prints the response JSON. A real proxy must also map responses to Teams activities, handle user identity, and keep each user's conversation separate. The legacy [Agent Application endpoint](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/agent-applications) supports stateless Responses calls; current endpoints can support conversation and runtime sessions, as the [hosted-session guide](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/manage-hosted-sessions) explains. Follow the contract for the URL you copied rather than assuming all Responses endpoints share the same state behavior.

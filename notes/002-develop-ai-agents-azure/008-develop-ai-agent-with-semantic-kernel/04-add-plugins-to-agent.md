@@ -36,20 +36,24 @@ from typing import Annotated
 from agent_framework import tool
 from pydantic import Field
 
-@tool(approval_mode="never_require")
+# A tool the model can call; the docstring becomes its description
+@tool(approval_mode="never_require")  # runs with no approval step
 def submit_claim(
+    # Type hints and Field descriptions build the tool's JSON schema
     to: Annotated[str, Field(description="The claim email recipient")],
     subject: Annotated[str, Field(description="The email subject")],
     body: Annotated[str, Field(description="Itemized expenses and their total")],
 ) -> str:
     """Print an expense claim email without sending it."""
+    # Simulated submit: print the email instead of sending it
     print("To:", to)
     print("Subject:", subject)
     print(body)
+    # This string goes back to the model as the tool result
     return "Claim email printed. No email was sent."
 ```
 
-The schema exposes three string arguments. The model fills them; the framework calls `submit_claim`; the returned string becomes tool-result context for the model's final reply. Returning a result and explicitly describing the simulation are teaching adaptations of the exercise's print-only function.
+Returning a result and explicitly describing the simulation are teaching adaptations of the exercise's print-only function.
 
 ### Give the agent the tool and the data
 
@@ -57,16 +61,22 @@ Replace **only `main()`** from unit 03 with the following. Keep the `if __name__
 
 ```python
 async def main():
+    # Read PROJECT_ENDPOINT and MODEL_DEPLOYMENT_NAME from .env
     load_dotenv()
+    # Find data.txt beside the script, whatever the working directory
     expenses = Path(__file__).with_name("data.txt").read_text(encoding="utf-8")
     print(expenses)
+    # The requested action comes from the user, the facts from the file
     prompt = input("What would you like me to do with these expenses? ")
+    # Get tokens for the account selected by az login
     with AzureCliCredential() as credential:
+        # Chat client for your model deployment, via the Foundry project
         client = FoundryChatClient(
             project_endpoint=os.environ["PROJECT_ENDPOINT"],
             model=os.environ["MODEL_DEPLOYMENT_NAME"],  # deployment name
             credential=credential,
         )
+        # Same agent as unit 03, now with the tool and when to use it
         async with Agent(
             client=client,
             name="ExpenseClaimAgent",
@@ -77,13 +87,14 @@ async def main():
                 "and a body containing itemized expenses and the total. "
                 "Do not ask for more information or claim an email was sent."
             ),
-            tools=[submit_claim],
+            tools=[submit_claim],  # registers it; naming it in instructions is not enough
         ) as agent:
+            # Request and data in one message; tool calls happen inside run
             response = await agent.run(f"Request: {prompt}\nExpenses:\n{expenses}")
             print(response.text)
 ```
 
-`Path(__file__).with_name(...)` resolves the data relative to the program, so running it from a different working directory still finds the file. `tools=[submit_claim]` registers the function; naming it in instructions alone would not. This run needs no manual `requires_action` loop because Agent Framework performs function dispatch.
+This run needs no manual `requires_action` loop because Agent Framework performs function dispatch.
 
 Run `python agent-framework.py` and enter `Submit a claim for these expenses.` Look for the function's `To:` and `Subject:` output, then the model's final confirmation. Verify the three amounts sum to **215.40**. This tests both tool execution and the generated claim; a friendly final sentence alone does not prove the tool ran.
 

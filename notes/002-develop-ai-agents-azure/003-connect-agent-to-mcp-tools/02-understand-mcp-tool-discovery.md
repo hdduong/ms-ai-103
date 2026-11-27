@@ -13,17 +13,21 @@ Lab: [Extend agents with MCP tools](https://microsoftlearning.github.io/mslearn-
 ```python
 from fastmcp import FastMCP
 
+# Create the MCP server that hosts the inventory tools
 mcp = FastMCP(name="Inventory")
 
+# Register as a tool; clients discover its name, inputs, and docstring
 @mcp.tool()
 def get_inventory_levels() -> dict:
     """Return the current inventory count for each product."""
+    # Hard-coded lab data stands in for a real inventory system
     return {
         "Moisturizer": 6, "Shampoo": 8, "Body Spray": 28, "Hair Gel": 5,
         "Lip Balm": 12, "Skin Serum": 9, "Cleanser": 30, "Conditioner": 3,
         "Setting Powder": 17, "Dry Shampoo": 45,
     }
 
+# Second tool; the agent needs both to apply its restock rule
 @mcp.tool()
 def get_weekly_sales() -> dict:
     """Return units sold this week for each product."""
@@ -34,6 +38,7 @@ def get_weekly_sales() -> dict:
     }
 
 if __name__ == "__main__":
+    # Serve over stdin/stdout; the client starts this file as a subprocess
     mcp.run(transport="stdio", show_banner=False)
 ```
 
