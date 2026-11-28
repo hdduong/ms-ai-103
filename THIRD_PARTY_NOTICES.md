@@ -61,3 +61,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## MicrosoftLearning/mslearn-ai-language
+
+Source snapshot: [`a9e1ab027afb769f67381719dc7ee8624452c4a8`](https://github.com/MicrosoftLearning/mslearn-ai-language/tree/a9e1ab027afb769f67381719dc7ee8624452c4a8).
+
+The language, speech, and translation labs in path 003 are adapted from this repo. [Upstream license](https://github.com/MicrosoftLearning/mslearn-ai-language/blob/a9e1ab027afb769f67381719dc7ee8624452c4a8/LICENSE): MIT, Copyright (c) 2023 Microsoft Learning.
